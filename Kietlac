@@ -1,0 +1,154 @@
+-- DELTA EXECUTOR COMPATIBLE SCRIPT
+-- MENU: "Kiệt Lặc" - Speed & Noclip
+-- UI Library: Synapse X compatible (Delta supports)
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Tạo GUI Menu
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "KietLacMenu"
+screenGui.Parent = player.PlayerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.BackgroundTransparency = 0.1
+mainFrame.BorderSizePixel = 2
+mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+title.Text = "KIỆT LẶC MENU"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = mainFrame
+
+-- Speed Slider
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.8, 0, 0, 25)
+speedLabel.Position = UDim2.new(0.1, 0, 0.2, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Text = "Tốc độ chạy: 16"
+speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextScaled = true
+speedLabel.Font = Enum.Font.Gotham
+speedLabel.Parent = mainFrame
+
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(0.8, 0, 0, 25)
+speedSlider.Position = UDim2.new(0.1, 0, 0.35, 0)
+speedSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+speedSlider.Text = "16"
+speedSlider.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedSlider.TextScaled = true
+speedSlider.Font = Enum.Font.GothamBold
+speedSlider.ClearTextOnFocus = false
+speedSlider.Parent = mainFrame
+
+speedSlider.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local val = tonumber(speedSlider.Text)
+        if val and val > 0 and val < 500 then
+            humanoid.WalkSpeed = val
+            speedLabel.Text = "Tốc độ chạy: " .. val
+        else
+            speedSlider.Text = tostring(humanoid.WalkSpeed)
+        end
+    end
+end)
+
+-- Noclip Toggle
+local noclipLabel = Instance.new("TextLabel")
+noclipLabel.Size = UDim2.new(0.8, 0, 0, 25)
+noclipLabel.Position = UDim2.new(0.1, 0, 0.55, 0)
+noclipLabel.BackgroundTransparency = 1
+noclipLabel.Text = "Noclip: TẮT"
+noclipLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+noclipLabel.TextScaled = true
+noclipLabel.Font = Enum.Font.Gotham
+noclipLabel.Parent = mainFrame
+
+local noclipButton = Instance.new("TextButton")
+noclipButton.Size = UDim2.new(0.8, 0, 0, 30)
+noclipButton.Position = UDim2.new(0.1, 0, 0.7, 0)
+noclipButton.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+noclipButton.Text = "BẬT NOCLIP"
+noclipButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+noclipButton.TextScaled = true
+noclipButton.Font = Enum.Font.GothamBold
+noclipButton.Parent = mainFrame
+
+local noclipActive = false
+local noclipConnection = nil
+
+noclipButton.MouseButton1Click:Connect(function()
+    noclipActive = not noclipActive
+    if noclipActive then
+        noclipLabel.Text = "Noclip: BẬT"
+        noclipButton.Text = "TẮT NOCLIP"
+        noclipButton.BackgroundColor3 = Color3.fromRGB(150, 30, 30)
+        if noclipConnection then noclipConnection:Disconnect() end
+        noclipConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if character and rootPart then
+                for _, v in pairs(character:GetChildren()) do
+                    if v:IsA("BasePart") then
+                        v.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        noclipLabel.Text = "Noclip: TẮT"
+        noclipButton.Text = "BẬT NOCLIP"
+        noclipButton.BackgroundColor3 = Color3.fromRGB(60, 60, 90)
+        if noclipConnection then
+            noclipConnection:Disconnect()
+            noclipConnection = nil
+        end
+        if character then
+            for _, v in pairs(character:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = true
+                end
+            end
+        end
+    end
+end)
+
+-- Reset Speed Button
+local resetButton = Instance.new("TextButton")
+resetButton.Size = UDim2.new(0.4, 0, 0, 25)
+resetButton.Position = UDim2.new(0.3, 0, 0.88, 0)
+resetButton.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+resetButton.Text = "Reset"
+resetButton.TextColor3 = Color3.fromRGB(255, 200, 200)
+resetButton.TextScaled = true
+resetButton.Font = Enum.Font.GothamBold
+resetButton.Parent = mainFrame
+
+resetButton.MouseButton1Click:Connect(function()
+    humanoid.WalkSpeed = 16
+    speedSlider.Text = "16"
+    speedLabel.Text = "Tốc độ chạy: 16"
+end)
+
+-- Anti-Kick loop
+game:GetService("RunService").Heartbeat:Connect(function()
+    pcall(function()
+        if player and player.Character then
+            player.Character:FindFirstChild("Humanoid").WalkSpeed = humanoid.WalkSpeed
+        end
+    end)
+end)
+
+print("Kiệt Lặc Menu loaded. Delta compatible.")
