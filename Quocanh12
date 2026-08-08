@@ -1,0 +1,697 @@
+-- QUỐC ANH HUB (MENU NGẮN GỌN + FULL TÍNH NĂNG)
+-- LocalScript -> StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local mouse = player:GetMouse()
+
+--// Biến Target Lock
+local aimEnabled = false
+local showFOV = true
+local target = nil
+local FOV = 180
+local MIN_FOV = 60
+local MAX_FOV = 350
+local smooth = 0.18
+local AUTO_SHOOT = true
+local AIM_PART = "Head"
+
+--// Biến Speed & Jump
+local speedVal = 16
+local jumpVal = 50
+local speedOn = false
+local jumpOn = false
+
+--// Biến INFJUMP
+local infJumpOn = false
+local infJumpConnection = nil
+
+--// Biến NOCLIP
+local noclipOn = false
+
+--// Biến ESP
+local espOn = false
+local espLabels = {}
+local espConnections = {}
+local espPlayerAddedConn = nil
+local espPlayerRemovingConn = nil
+
+--// Biến HITBOX
+local hitboxOn = false
+local hitboxSize = 4
+local hitboxParts = {}
+
+--// GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "QuocAnhHub"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+--// NÚT MÈO
+local catBtn = Instance.new("TextButton")
+catBtn.Size = UDim2.fromOffset(56, 56)
+catBtn.Position = UDim2.new(1, -70, 1, -140)
+catBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+catBtn.Text = "🐱"
+catBtn.TextColor3 = Color3.new(1,1,1)
+catBtn.TextScaled = true
+catBtn.Visible = false
+catBtn.Parent = gui
+Instance.new("UICorner", catBtn).CornerRadius = UDim.new(1, 0)
+
+--// MAIN (RÚT NGẮN: giảm chiều cao xuống 400)
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(300, 400)
+main.Position = UDim2.new(.5, -150, .5, -200)
+main.BackgroundColor3 = Color3.fromRGB(18,18,24)
+main.Visible = true
+main.Parent = gui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,18)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(75,75,95)
+stroke.Thickness = 2
+stroke.Parent = main
+
+--// TITLE (cao 35 thay vì 40)
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -30, 0, 35)
+title.Position = UDim2.fromOffset(15, 5)
+title.BackgroundTransparency = 1
+title.Text = "⚡ QUỐC ANH HUB"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.Parent = main
+
+--// NÚT X
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.fromOffset(30, 30)
+closeBtn.Position = UDim2.new(1, -38, 0, 5)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(200,200,200)
+closeBtn.TextSize = 18
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.Parent = main
+
+closeBtn.Activated:Connect(function()
+    main.Visible = false
+    catBtn.Visible = true
+end)
+
+--// SCROLL (vị trí và kích thước điều chỉnh)
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, -30, 1, -50)
+scroll.Position = UDim2.fromOffset(15, 45)
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.ScrollBarThickness = 5
+scroll.ScrollBarImageColor3 = Color3.fromRGB(60,60,80)
+scroll.Parent = main
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, 0, 0, 0)
+content.BackgroundTransparency = 1
+content.Parent = scroll
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 4)  -- giảm padding
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = content
+
+local function updateCanvas()
+    local y = 0
+    for _, child in ipairs(content:GetChildren()) do
+        if child:IsA("GuiObject") then
+            y = y + child.Size.Y.Offset + 4
+        end
+    end
+    content.Size = UDim2.new(1, 0, 0, y)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, y)
+end
+
+--// Toggle (thu nhỏ: 28 thay vì 34)
+local function makeToggle(text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 28)
+    btn.BackgroundColor3 = Color3.fromRGB(35,35,45)
+    btn.Text = text .. "   •   OFF"
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.GothamMedium
+    btn.Parent = content
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+    local state = false
+    btn.Activated:Connect(function()
+        state = not state
+        btn.Text = text .. "   •   " .. (state and "ON" or "OFF")
+        btn.BackgroundColor3 = state and Color3.fromRGB(45,120,75) or Color3.fromRGB(35,35,45)
+        callback(state)
+    end)
+    updateCanvas()
+    return btn
+end
+
+--// Slider (thu nhỏ: frame 36 thay vì 42)
+local function makeSlider(text, minVal, maxVal, defaultVal, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 36)
+    frame.BackgroundTransparency = 1
+    frame.Parent = content
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 16)
+    label.BackgroundTransparency = 1
+    label.Text = text .. ": " .. defaultVal
+    label.TextColor3 = Color3.fromRGB(190,190,200)
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    local slider = Instance.new("TextButton")
+    slider.Size = UDim2.new(1, 0, 0, 16)
+    slider.Position = UDim2.new(0,0,0,18)
+    slider.Text = ""
+    slider.BackgroundColor3 = Color3.fromRGB(40,40,50)
+    slider.Parent = frame
+    Instance.new("UICorner", slider).CornerRadius = UDim.new(0,5)
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(0,0,1,0)
+    fill.BackgroundColor3 = Color3.fromRGB(90,140,255)
+    fill.Parent = slider
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(0,5)
+
+    local val = defaultVal
+    local function updateSlider(value)
+        value = math.clamp(value, minVal, maxVal)
+        local alpha = (value - minVal) / (maxVal - minVal)
+        fill.Size = UDim2.new(alpha, 0, 1, 0)
+        label.Text = text .. ": " .. math.floor(value)
+        callback(value)
+    end
+    updateSlider(val)
+
+    local dragging = false
+    local dragType = nil
+    slider.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragType = (input.UserInputType == Enum.UserInputType.Touch) and "Touch" or "Mouse"
+            local x = input.Position.X - slider.AbsolutePosition.X
+            local alpha = math.clamp(x / slider.AbsoluteSize.X, 0, 1)
+            updateSlider(minVal + (maxVal - minVal) * alpha)
+        end
+    end)
+    slider.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+            dragType = nil
+        end
+    end)
+
+    local function moveSlider(input)
+        if not dragging then return end
+        local x = input.Position.X - slider.AbsolutePosition.X
+        local alpha = math.clamp(x / slider.AbsoluteSize.X, 0, 1)
+        updateSlider(minVal + (maxVal - minVal) * alpha)
+    end
+
+    UIS.InputChanged:Connect(function(input)
+        if dragging and dragType == "Mouse" and input.UserInputType == Enum.UserInputType.MouseMovement then
+            moveSlider(input)
+        end
+    end)
+    UIS.TouchMoved:Connect(function(input)
+        if dragging and dragType == "Touch" and input.UserInputType == Enum.UserInputType.Touch then
+            moveSlider(input)
+        end
+    end)
+
+    updateCanvas()
+    return { label = label, slider = slider, fill = fill, update = updateSlider }
+end
+
+--// Áp dụng Speed & Jump
+local function applySpeed()
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.WalkSpeed = speedOn and speedVal or 16
+    end
+end
+
+local function applyJump()
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.JumpPower = jumpOn and jumpVal or 50
+    end
+end
+
+--// CÁC TÍNH NĂNG
+-- SPEED
+makeToggle("🏃 Speed", function(on)
+    speedOn = on
+    applySpeed()
+end)
+makeSlider("Speed", 16, 100, 16, function(val)
+    speedVal = val
+    applySpeed()
+end)
+
+-- JUMP
+makeToggle("🦘 Jump Boost", function(on)
+    jumpOn = on
+    applyJump()
+end)
+makeSlider("Jump Power", 50, 150, 50, function(val)
+    jumpVal = val
+    applyJump()
+end)
+
+-- INFJUMP
+makeToggle("🦅 infjump", function(on)
+    infJumpOn = on
+    if on then
+        if not infJumpConnection then
+            infJumpConnection = UIS.JumpRequest:Connect(function()
+                local char = player.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 and hum.Sit == false then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+        end
+    else
+        if infJumpConnection then
+            infJumpConnection:Disconnect()
+            infJumpConnection = nil
+        end
+    end
+end)
+
+-- NOCLIP
+makeToggle("👻 Noclip", function(on)
+    noclipOn = on
+end)
+RunService.Stepped:Connect(function()
+    if not noclipOn then return end
+    local char = player.Character
+    if char then
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- ESP
+local function createESPForPlayer(other)
+    if other == player then return end
+    if not other.Character then return end
+    local char = other.Character
+    local head = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+    if not head then return end
+
+    local hl = Instance.new("Highlight")
+    hl.Name = "GameOverlay"
+    hl.FillTransparency = 0.75
+    hl.OutlineTransparency = 0.1
+    hl.Parent = char
+
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "NameESP"
+    billboard.Size = UDim2.new(0, 120, 0, 24)
+    billboard.Adornee = head
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.MaxDistance = 200
+    billboard.AlwaysOnTop = true
+    billboard.Parent = head
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = other.Name
+    nameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+    nameLabel.TextScaled = false
+    nameLabel.TextSize = 12
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextStrokeTransparency = 0.2
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Center
+    nameLabel.Parent = billboard
+
+    table.insert(espLabels, billboard)
+    table.insert(espLabels, hl)
+end
+
+local function clearESP()
+    for _, obj in ipairs(espLabels) do
+        pcall(function() obj:Destroy() end)
+    end
+    espLabels = {}
+    for _, conn in ipairs(espConnections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    espConnections = {}
+    if espPlayerAddedConn then
+        espPlayerAddedConn:Disconnect()
+        espPlayerAddedConn = nil
+    end
+    if espPlayerRemovingConn then
+        espPlayerRemovingConn:Disconnect()
+        espPlayerRemovingConn = nil
+    end
+end
+
+makeToggle("👁 ESP", function(on)
+    espOn = on
+    if on then
+        for _, other in ipairs(Players:GetPlayers()) do
+            createESPForPlayer(other)
+        end
+        espPlayerAddedConn = Players.PlayerAdded:Connect(function(other)
+            createESPForPlayer(other)
+            local conn = other.CharacterAdded:Connect(function()
+                wait(0.2)
+                createESPForPlayer(other)
+            end)
+            table.insert(espConnections, conn)
+        end)
+        espPlayerRemovingConn = Players.PlayerRemoving:Connect(function(other)
+            for i, obj in ipairs(espLabels) do
+                if obj:IsA("BillboardGui") and obj.Adornee and obj.Adornee:FindFirstAncestor(other.Name) then
+                    pcall(function() obj:Destroy() end)
+                    table.remove(espLabels, i)
+                elseif obj:IsA("Highlight") and obj.Parent and obj.Parent.Name == other.Name then
+                    pcall(function() obj:Destroy() end)
+                    table.remove(espLabels, i)
+                end
+            end
+        end)
+        for _, other in ipairs(Players:GetPlayers()) do
+            if other ~= player then
+                local conn = other.CharacterAdded:Connect(function()
+                    wait(0.2)
+                    createESPForPlayer(other)
+                end)
+                table.insert(espConnections, conn)
+            end
+        end
+    else
+        clearESP()
+    end
+end)
+
+-- HITBOX
+local function clearHitboxes()
+    for _, part in pairs(hitboxParts) do
+        if part and part.Parent then
+            pcall(function() part:Destroy() end)
+        end
+    end
+    table.clear(hitboxParts)
+end
+
+local function createHitbox(character)
+    if not hitboxOn then return end
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local old = character:FindFirstChild("HitboxDebug")
+    if old then old:Destroy() end
+
+    local hitbox = Instance.new("Part")
+    hitbox.Name = "HitboxDebug"
+    hitbox.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
+    hitbox.Transparency = 0.7
+    hitbox.CanCollide = false
+    hitbox.CanTouch = false
+    hitbox.CanQuery = false
+    hitbox.Massless = true
+    hitbox.Anchored = false
+    hitbox.Parent = character
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = root
+    weld.Part1 = hitbox
+    weld.Parent = hitbox
+
+    table.insert(hitboxParts, hitbox)
+end
+
+local function refreshHitboxes()
+    clearHitboxes()
+    if not hitboxOn then return end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Character then
+            createHitbox(plr.Character)
+        end
+    end
+end
+
+makeToggle("📦 Hitbox Debug", function(on)
+    hitboxOn = on
+    refreshHitboxes()
+end)
+
+makeSlider("Hitbox Size", 2, 10, 4, function(value)
+    hitboxSize = value
+    if hitboxOn then
+        refreshHitboxes()
+    end
+end)
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        if hitboxOn then
+            createHitbox(plr.Character)
+        end
+    end)
+end)
+
+-- TARGET LOCK
+local circle = Instance.new("Frame")
+circle.AnchorPoint = Vector2.new(.5,.5)
+circle.Position = UDim2.fromScale(.5,.5)
+circle.BackgroundTransparency = 1
+circle.BorderSizePixel = 2
+circle.BorderColor3 = Color3.fromRGB(90,140,255)
+circle.Visible = false
+circle.Parent = gui
+Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
+
+local function updateCircle()
+    circle.Size = UDim2.fromOffset(FOV*2, FOV*2)
+    circle.Visible = showFOV and aimEnabled
+end
+updateCircle()
+
+makeSlider("FOV", MIN_FOV, MAX_FOV, FOV, function(val)
+    FOV = val
+    updateCircle()
+end)
+
+makeToggle("🔵 FOV Circle", function(on)
+    showFOV = on
+    updateCircle()
+end)
+
+local function getAimPart(char)
+    local part = char:FindFirstChild(AIM_PART)
+    if part then return part end
+    return char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Head")
+end
+
+local function findTarget()
+    local best = nil
+    local bestDist = FOV
+    local center = camera.ViewportSize/2
+    for _, other in ipairs(Players:GetPlayers()) do
+        if other ~= player and other.Character then
+            local char = other.Character
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local aim = getAimPart(char)
+            if hum and hum.Health > 0 and aim then
+                local screen, vis = camera:WorldToViewportPoint(aim.Position)
+                if vis then
+                    local d = (Vector2.new(screen.X,screen.Y)-center).Magnitude
+                    if d < bestDist then
+                        bestDist = d
+                        best = other
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+local function shoot()
+    local char = player.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            local remote = tool:FindFirstChild("RemoteEvent")
+            if remote then
+                remote:FireServer()
+            else
+                mouse.KeyDown:Fire("Button1", "Click")
+            end
+        else
+            mouse.KeyDown:Fire("Button1", "Click")
+        end
+    end
+end
+
+makeToggle("🎯 Target Lock", function(on)
+    aimEnabled = on
+    if on then
+        target = findTarget()
+        updateCircle()
+    else
+        target = nil
+        circle.Visible = false
+    end
+end)
+
+RunService:BindToRenderStep("AimLock", Enum.RenderPriority.Camera.Value + 1, function()
+    if not aimEnabled then return end
+    if not target or not target.Character then
+        target = findTarget()
+        return
+    end
+    local char = target.Character
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    local aim = getAimPart(char)
+    if not hum or hum.Health <= 0 or not aim then
+        target = findTarget()
+        return
+    end
+    local pos = aim.Position
+    local wanted = CFrame.lookAt(camera.CFrame.Position, pos)
+    camera.CFrame = camera.CFrame:Lerp(wanted, smooth)
+    if AUTO_SHOOT then
+        local screen, vis = camera:WorldToViewportPoint(pos)
+        if vis then
+            local center = camera.ViewportSize/2
+            local d = (Vector2.new(screen.X,screen.Y)-center).Magnitude
+            if d < FOV * 0.3 then
+                shoot()
+            end
+        end
+    end
+end)
+
+-- Phím T bắn
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.T and aimEnabled then
+        shoot()
+    end
+end)
+
+-- RESPAWN
+player.CharacterAdded:Connect(function()
+    target = nil
+    if aimEnabled then
+        wait(0.5)
+        target = findTarget()
+    end
+    applySpeed()
+    applyJump()
+end)
+
+-- KÉO MENU (title)
+local dragMenu = false
+local dragStart = Vector2.new()
+local startPos = UDim2.new()
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragMenu = true
+        dragStart = Vector2.new(input.Position.X, input.Position.Y)
+        startPos = main.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragMenu and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.TouchMoved:Connect(function(input)
+    if dragMenu and input.UserInputType == Enum.UserInputType.Touch then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragMenu = false
+    end
+end)
+
+-- KÉO MÈO
+local catDrag = false
+local catDragStart = Vector2.new()
+local catStartPos = UDim2.new()
+
+catBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        catDrag = true
+        catDragStart = Vector2.new(input.Position.X, input.Position.Y)
+        catStartPos = catBtn.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if catDrag and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - catDragStart
+        catBtn.Position = UDim2.new(catStartPos.X.Scale, catStartPos.X.Offset + delta.X, catStartPos.Y.Scale, catStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.TouchMoved:Connect(function(input)
+    if catDrag and input.UserInputType == Enum.UserInputType.Touch then
+        local delta = Vector2.new(input.Position.X, input.Position.x, input.Position,Y)
+CatStartPos = catBtn.Position
+    end
+end)
+UIS.TouchMoved:Connect(function(input)
+    if catDrag and input.UserInputType == Enum.UserInputType.Touch then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - catDragStart
+        catBtn.Position = UDim2.new(catStartPos.X.Scale, catStartPos.X.Offset + delta.X, catStartPos.Y.Scale, catStartPos.Y.Offset + delta.Y)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        catDrag = false
+    end
+end)
+
+catBtn.Activated:Connect(function()
+    main.Visible = true
+    catBtn.Visible = false
+end)
+
+-- Khởi tạo
+catBtn.Visible = false
+main.Visible = true
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+wait(0.1)
+updateCanvas()
