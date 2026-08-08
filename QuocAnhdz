@@ -5,7 +5,6 @@ local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local VirtualInput = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -33,7 +32,7 @@ local State = {
     CurrentTab = 1,  -- 1=Chiến Đấu, 2=Di Chuyển, 3=Hình Ảnh, 4=Misc
 
     -- CHIẾN ĐẤU
-    Aimbot = { Enabled = false, FOVCircle = false, FOVSize = 150, Smoothness = 0.96, Prediction = 0.035, Silent = true },
+    Aimbot = { Enabled = false, FOVCircle = false, FOVSize = 150, Smoothness = 0.96, Prediction = 0.035 },
     Hitbox = { Enabled = false, Size = 5 },
 
     -- DI CHUYỂN
@@ -52,8 +51,6 @@ local State = {
     AutoRespawn = false,
     AntiAFK = false,
 }
-
-local TabNames = {"⚔️ Chiến Đấu", "🏃 Di Chuyển", "👁️ Hình Ảnh", "ℹ️ Misc"}
 
 -- ===================== VARIABLES =====================
 local aimbotTarget = nil
@@ -125,10 +122,6 @@ local function getRoot()
     return c and c:FindFirstChild("HumanoidRootPart") or nil
 end
 
-local function isTouchDevice()
-    return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-end
-
 local function makeDraggable(handle, target, onTap)
     local dragging, startPos, startAbs, moved = false, nil, nil, 0
     handle.InputBegan:Connect(function(input)
@@ -164,11 +157,10 @@ local gui = new("ScreenGui", {
     Parent = LocalPlayer.PlayerGui,
 })
 
--- ===================== MAIN FRAME =====================
 local root = new("Frame", {
     Name = "Root", Parent = gui,
     AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
-    Size = UDim2.fromOffset(320, 440),
+    Size = UDim2.fromOffset(340, 460),
     BackgroundTransparency = 1, Visible = State.MenuOpen,
 })
 local uiScale = new("UIScale", { Parent = root })
@@ -180,7 +172,6 @@ end
 local baseScale = fitScreen()
 uiScale.Scale = baseScale
 
--- GLOW
 local glow = new("Frame", {
     Parent = root, ZIndex = 0,
     Position = UDim2.new(0, -8, 0, -8), Size = UDim2.new(1, 16, 1, 16),
@@ -189,7 +180,6 @@ local glow = new("Frame", {
 corner(glow, 22)
 gradient(glow, THEME.Accent, THEME.Accent2, 140)
 
--- MAIN FRAME
 local main = new("Frame", {
     Name = "Main", Parent = root, ZIndex = 1,
     Size = UDim2.fromScale(1, 1),
@@ -268,75 +258,7 @@ new("Frame", {
     BackgroundColor3 = THEME.Stroke, BorderSizePixel = 0,
 })
 
--- ===================== TAB BAR (TRÊN ĐẦU CONTENT) =====================
-local tabBar = new("Frame", {
-    Parent = main,
-    Position = UDim2.new(0, 0, 0, 53), 
-    Size = UDim2.new(1, 0, 0, 32),
-    BackgroundColor3 = THEME.Card, 
-    BackgroundTransparency = 0.3,
-    BorderSizePixel = 0, 
-    ClipsDescendants = true,
-})
-new("Frame", {
-    Parent = tabBar, 
-    Position = UDim2.new(0, 0, 1, -1), 
-    Size = UDim2.new(1, 0, 0, 1),
-    BackgroundColor3 = THEME.Stroke, 
-    BorderSizePixel = 0,
-})
-
-local tabLayout = new("UIListLayout", {
-    Parent = tabBar, 
-    Padding = UDim.new(0, 4),
-    FillDirection = Enum.FillDirection.Horizontal,
-    HorizontalAlignment = Enum.HorizontalAlignment.Center,
-    VerticalAlignment = Enum.VerticalAlignment.Center,
-})
-
-local tabButtons = {}
-local tabFrames = {}
-local tabNames = {"⚔️ Chiến Đấu", "🏃 Di Chuyển", "👁️ Hình Ảnh", "ℹ️ Misc"}
-
-local function createTabButton(name, index)
-    local btn = new("TextButton", {
-        Parent = tabBar, 
-        AutoButtonColor = false,
-        Size = UDim2.new(0, 68, 0, 22),
-        BackgroundColor3 = (index == 1) and THEME.Accent or Color3.fromRGB(30, 33, 45),
-        BackgroundTransparency = (index == 1) and 0.15 or 0.3,
-        BorderSizePixel = 0,
-        Font = Enum.Font.GothamBold, 
-        Text = name, 
-        TextSize = 9,
-        TextColor3 = (index == 1) and THEME.Accent or THEME.Dim,
-    })
-    corner(btn, 6)
-    stroke(btn, THEME.Stroke, 1)
-
-    btn.MouseButton1Click:Connect(function()
-        State.CurrentTab = index
-        for i, b in ipairs(tabButtons) do
-            local isActive = (i == index)
-            b.BackgroundColor3 = isActive and THEME.Accent or Color3.fromRGB(30, 33, 45)
-            b.BackgroundTransparency = isActive and 0.15 or 0.3
-            b.TextColor3 = isActive and THEME.Accent or THEME.Dim
-        end
-        for i, f in ipairs(tabFrames) do
-            f.Visible = (i == index)
-        end
-    end)
-
-    return btn
-end
-
--- Tạo các tab
-for i, name in ipairs(tabNames) do
-    local btn = createTabButton(name, i)
-    table.insert(tabButtons, btn)
-end
-
--- ===================== SIDEBAR TRÁI (HÀNG DỌC) =====================
+-- ===================== SIDEBAR TRÁI =====================
 local sidebar = new("Frame", {
     Parent = main,
     Position = UDim2.new(0, 0, 0, 53),
@@ -369,10 +291,10 @@ new("UIPadding", {
 
 local tabButtons = {}
 local tabFrames = {}
-local tabNames = {"⚔️", "🏃", "👁️", "ℹ️"}
-local fullNames = {"Chiến Đấu", "Di Chuyển", "Hình Ảnh", "Misc"}
+local tabIcons = {"⚔️", "🏃", "👁️", "ℹ️"}
+local tabFull = {"Chiến Đấu", "Di Chuyển", "Hình Ảnh", "Misc"}
 
-for i, name in ipairs(tabNames) do
+for i = 1, 4 do
     local btn = new("TextButton", {
         Parent = sidebar,
         Size = UDim2.new(0, 60, 0, 44),
@@ -380,7 +302,7 @@ for i, name in ipairs(tabNames) do
         BackgroundTransparency = (i == 1) and 0.15 or 0.3,
         BorderSizePixel = 0,
         Font = Enum.Font.GothamBold,
-        Text = name,
+        Text = tabIcons[i],
         TextSize = 18,
         TextColor3 = (i == 1) and THEME.Accent or THEME.Dim,
         AutoButtonColor = false,
@@ -394,7 +316,7 @@ for i, name in ipairs(tabNames) do
         Position = UDim2.new(0, 0, 1, 2),
         Size = UDim2.new(1, 0, 0, 12),
         Font = Enum.Font.GothamMedium,
-        Text = fullNames[i],
+        Text = tabFull[i],
         TextSize = 7,
         TextColor3 = THEME.Dim,
         TextXAlignment = Enum.TextXAlignment.Center,
@@ -416,7 +338,7 @@ for i, name in ipairs(tabNames) do
     table.insert(tabButtons, btn)
 end
 
--- ===================== CONTENT AREA (BÊN PHẢI) =====================
+-- ===================== CONTENT AREA =====================
 local contentArea = new("Frame", {
     Parent = main,
     Position = UDim2.new(0, 85, 0, 53),
@@ -447,12 +369,6 @@ for i = 1, 4 do
     table.insert(tabFrames, frame)
 end
 
--- Gán các tab vào frame
-tabCombat = tabFrames[1]
-tabMovement = tabFrames[2]
-tabVisuals = tabFrames[3]
-tabMisc = tabFrames[4]
-
 -- ===================== NÚT QA MỞ MENU =====================
 local fab = new("TextButton", {
     Name = "Fab", Parent = gui, AutoButtonColor = false,
@@ -471,11 +387,9 @@ fab.MouseButton1Click:Connect(function()
     fab.Visible = false
 end)
 
--- Kéo menu
 makeDraggable(header, root, nil)
 makeDraggable(fab, fab, nil)
 
--- ===================== FPS =====================
 RunService.Heartbeat:Connect(function()
     if not root.Visible then return end
     local fps = math.floor(1 / RunService.Heartbeat:Wait())
@@ -637,11 +551,9 @@ new("UIPadding", { Parent = aimContent, PaddingLeft = UDim.new(0, 8), PaddingRig
 addToggle(aimContent, "Enable Aimbot", false, Color3.fromRGB(220, 0, 255), function(v)
     State.Aimbot.Enabled = v
 end)
-
 addToggle(aimContent, "FOV Circle (Cầu Vồng)", false, Color3.fromRGB(220, 0, 255), function(v)
     State.Aimbot.FOVCircle = v
 end)
-
 addSlider(aimContent, "FOV Size", 30, 350, 150, function(v)
     State.Aimbot.FOVSize = v
 end)
@@ -835,7 +747,6 @@ end)
 addToggle(specialContent, "🦅 Infinity Jump", false, Color3.fromRGB(0, 150, 255), function(v)
     State.InfinityJump = v
 end)
-
 -- ===================== TAB 3: HÌNH ẢNH =====================
 local tabVisuals = tabFrames[3]
 
@@ -964,7 +875,6 @@ local infoContent = new("Frame", {
 new("UIListLayout", { Parent = infoContent, Padding = UDim.new(0, 2) })
 new("UIPadding", { Parent = infoContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
--- Tên
 new("TextLabel", {
     Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
@@ -973,7 +883,6 @@ new("TextLabel", {
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- ID
 new("TextLabel", {
     Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
@@ -982,7 +891,6 @@ new("TextLabel", {
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Display Name
 new("TextLabel", {
     Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
@@ -991,7 +899,6 @@ new("TextLabel", {
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Ngày tạo (sẽ cập nhật sau)
 local ageLabel = new("TextLabel", {
     Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
@@ -1000,7 +907,6 @@ local ageLabel = new("TextLabel", {
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Lấy ngày tạo account
 spawn(function()
     local success, data = pcall(function()
         return game:HttpGet("https://users.roblox.com/v1/users/" .. LocalPlayer.UserId)
@@ -1043,7 +949,6 @@ local utilContent = new("Frame", {
 new("UIListLayout", { Parent = utilContent, Padding = UDim.new(0, 2) })
 new("UIPadding", { Parent = utilContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
--- God Mode (trang trí)
 addToggle(utilContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255, 50, 50), function(v)
     State.GodMode = v
     if v then
@@ -1063,7 +968,6 @@ addToggle(utilContent, "Anti AFK", false, Color3.fromRGB(255, 190, 80), function
     State.AntiAFK = v
 end)
 
--- Nút Join New Server
 local joinBtn = new("TextButton", {
     Parent = utilContent,
     Size = UDim2.new(1, 0, 0, 28),
@@ -1077,7 +981,6 @@ joinBtn.MouseButton1Click:Connect(function()
     TeleportService:Teleport(game.PlaceId)
 end)
 
--- Nút Destroy
 local destroyBtn = new("TextButton", {
     Parent = utilContent,
     Size = UDim2.new(1, 0, 0, 28),
@@ -1097,9 +1000,8 @@ destroyBtn.MouseButton1Click:Connect(function()
         hum.WalkSpeed = 16
         hum.JumpPower = 50
     end
-    print("👑 Quốc Anh Hub đã bị hủy!")
 end)
--- ===================== AIMBOT LOGIC (KHÔNG MẤT DI CHUYỂN TRÊN MOBILE) =====================
+-- ===================== AIMBOT LOGIC =====================
 local FOVring = Drawing.new("Circle")
 FOVring.Visible = false
 FOVring.Thickness = 2
@@ -1214,7 +1116,6 @@ RunService.Heartbeat:Connect(function()
     local velocity = root and root.Velocity or Vector3.new()
     local predictedPos = pos + velocity * State.Aimbot.Prediction
 
-    -- Kiểm tra touch (chỉ xoay camera khi có touch trên mobile)
     local isTouching = false
     if UserInputService.TouchEnabled then
         for _, touch in ipairs(UserInputService:GetTouchInputs()) do
@@ -1282,7 +1183,6 @@ LocalPlayer.CharacterAdded:Connect(function(char)
             end
         end)
     end
-    -- Áp dụng Speed + JumpBoost khi respawn
     local hum = char:WaitForChild("Humanoid")
     if State.Speed.Enabled then
         hum.WalkSpeed = State.Speed.Value
@@ -1428,7 +1328,6 @@ UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 -- ===================== KHỞI TẠO =====================
--- Mặc định menu đóng, nút QA hiện
 root.Visible = false
 fab.Visible = true
 
