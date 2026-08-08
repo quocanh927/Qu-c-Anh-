@@ -271,17 +271,24 @@ new("Frame", {
 -- ===================== TAB BAR (TRÊN ĐẦU CONTENT) =====================
 local tabBar = new("Frame", {
     Parent = main,
-    Position = UDim2.new(0, 0, 0, 53), Size = UDim2.new(1, 0, 0, 32),
-    BackgroundColor3 = THEME.Card, BackgroundTransparency = 0.3,
-    BorderSizePixel = 0, ClipsDescendants = true,
+    Position = UDim2.new(0, 0, 0, 53), 
+    Size = UDim2.new(1, 0, 0, 32),
+    BackgroundColor3 = THEME.Card, 
+    BackgroundTransparency = 0.3,
+    BorderSizePixel = 0, 
+    ClipsDescendants = true,
 })
 new("Frame", {
-    Parent = tabBar, Position = UDim2.new(0, 0, 1, -1), Size = UDim2.new(1, 0, 0, 1),
-    BackgroundColor3 = THEME.Stroke, BorderSizePixel = 0,
+    Parent = tabBar, 
+    Position = UDim2.new(0, 0, 1, -1), 
+    Size = UDim2.new(1, 0, 0, 1),
+    BackgroundColor3 = THEME.Stroke, 
+    BorderSizePixel = 0,
 })
 
 local tabLayout = new("UIListLayout", {
-    Parent = tabBar, Padding = UDim.new(0, 2),
+    Parent = tabBar, 
+    Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Horizontal,
     HorizontalAlignment = Enum.HorizontalAlignment.Center,
     VerticalAlignment = Enum.VerticalAlignment.Center,
@@ -289,15 +296,19 @@ local tabLayout = new("UIListLayout", {
 
 local tabButtons = {}
 local tabFrames = {}
+local tabNames = {"⚔️ Chiến Đấu", "🏃 Di Chuyển", "👁️ Hình Ảnh", "ℹ️ Misc"}
 
 local function createTabButton(name, index)
     local btn = new("TextButton", {
-        Parent = tabBar, AutoButtonColor = false,
-        Size = UDim2.new(0, 70, 0, 24),
+        Parent = tabBar, 
+        AutoButtonColor = false,
+        Size = UDim2.new(0, 68, 0, 22),
         BackgroundColor3 = (index == 1) and THEME.Accent or Color3.fromRGB(30, 33, 45),
         BackgroundTransparency = (index == 1) and 0.15 or 0.3,
         BorderSizePixel = 0,
-        Font = Enum.Font.GothamBold, Text = name, TextSize = 10,
+        Font = Enum.Font.GothamBold, 
+        Text = name, 
+        TextSize = 9,
         TextColor3 = (index == 1) and THEME.Accent or THEME.Dim,
     })
     corner(btn, 6)
@@ -320,10 +331,40 @@ local function createTabButton(name, index)
 end
 
 -- Tạo các tab
-local tabNames = {"⚔️ Chiến Đấu", "🏃 Di Chuyển", "👁️ Hình Ảnh", "ℹ️ Misc"}
 for i, name in ipairs(tabNames) do
     local btn = createTabButton(name, i)
     table.insert(tabButtons, btn)
+end
+
+-- ===================== CONTENT AREA (BÊN PHẢI) =====================
+local contentArea = new("Frame", {
+    Parent = main,
+    Position = UDim2.new(0, 0, 0, 85), 
+    Size = UDim2.new(1, 0, 1, -115),
+    BackgroundTransparency = 1,
+})
+
+-- Tạo 4 frame content (ẩn/hiện)
+for i = 1, 4 do
+    local frame = new("Frame", {
+        Parent = contentArea,
+        Size = UDim2.new(1, -10, 1, -5),
+        Position = UDim2.new(0, 5, 0, 5),
+        BackgroundTransparency = 1,
+        Visible = (i == 1),
+        ClipsDescendants = true,
+    })
+    new("UIListLayout", {
+        Parent = frame, 
+        Padding = UDim.new(0, 6),
+        SortOrder = Enum.SortOrder.LayoutOrder,
+    })
+    new("UIPadding", {
+        Parent = frame,
+        PaddingTop = UDim.new(0, 2),
+        PaddingBottom = UDim.new(0, 2),
+    })
+    table.insert(tabFrames, frame)
 end
 
 -- ===================== CONTENT AREA (BÊN PHẢI) =====================
