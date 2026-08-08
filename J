@@ -1,1 +1,862 @@
-B
+-- 👑 QUOCANH VIP - PART 1/2
+-- LocalScript > StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "QuocAnhVIP"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- MAIN
+local main = Instance.new("Frame")
+main.Size = UDim2.fromOffset(650,400)
+main.Position = UDim2.fromScale(.5,.5)
+main.AnchorPoint = Vector2.new(.5,.5)
+main.BackgroundColor3 = Color3.fromRGB(15,15,21)
+main.BorderSizePixel = 0
+main.Parent = gui
+
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,16)
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(65,65,85)
+stroke.Transparency = .2
+stroke.Parent = main
+
+-- SIDEBAR
+local sidebar = Instance.new("Frame")
+sidebar.Size = UDim2.new(0,165,1,0)
+sidebar.BackgroundColor3 = Color3.fromRGB(11,11,16)
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
+
+Instance.new("UICorner",sidebar).CornerRadius = UDim.new(0,16)
+
+-- LOGO
+local logo = Instance.new("TextLabel")
+logo.Size = UDim2.new(1,-20,0,45)
+logo.Position = UDim2.fromOffset(15,18)
+logo.BackgroundTransparency = 1
+logo.Text = "👑 QUOCANH"
+logo.TextColor3 = Color3.fromRGB(255,211,55)
+logo.TextSize = 21
+logo.Font = Enum.Font.GothamBold
+logo.TextXAlignment = Enum.TextXAlignment.Left
+logo.Parent = sidebar
+
+local version = Instance.new("TextLabel")
+version.Size = UDim2.new(1,-30,0,20)
+version.Position = UDim2.fromOffset(18,60)
+version.BackgroundTransparency = 1
+version.Text = "VIP EDITION"
+version.TextColor3 = Color3.fromRGB(100,100,115)
+version.TextSize = 10
+version.Font = Enum.Font.GothamBold
+version.TextXAlignment = Enum.TextXAlignment.Left
+version.Parent = sidebar
+
+-- CONTENT
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,-190,1,-30)
+content.Position = UDim2.fromOffset(180,15)
+content.BackgroundTransparency = 1
+content.Parent = main
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,0,0,45)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.fromRGB(245,245,250)
+title.TextSize = 25
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = content
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1,0,0,25)
+subtitle.Position = UDim2.fromOffset(0,42)
+subtitle.BackgroundTransparency = 1
+subtitle.TextColor3 = Color3.fromRGB(115,115,130)
+subtitle.TextSize = 12
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.Parent = content
+
+-- CLEAR CONTENT
+local function clearContent()
+	for _,obj in ipairs(content:GetChildren()) do
+		if obj ~= title and obj ~= subtitle then
+			obj:Destroy()
+		end
+	end
+end
+
+-- INFO CARD
+local function makeInfo(name,value,y)
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,-5,0,55)
+	frame.Position = UDim2.fromOffset(0,y)
+	frame.BackgroundColor3 = Color3.fromRGB(24,24,32)
+	frame.BorderSizePixel = 0
+	frame.Parent = content
+
+	Instance.new("UICorner",frame).CornerRadius = UDim.new(0,11)
+
+	local a = Instance.new("TextLabel")
+	a.Size = UDim2.new(.5,0,1,0)
+	a.Position = UDim2.fromOffset(15,0)
+	a.BackgroundTransparency = 1
+	a.Text = name
+	a.TextColor3 = Color3.fromRGB(190,190,200)
+	a.TextSize = 13
+	a.Font = Enum.Font.GothamBold
+	a.TextXAlignment = Enum.TextXAlignment.Left
+	a.Parent = frame
+
+	local b = Instance.new("TextLabel")
+	b.Size = UDim2.new(.45,0,1,0)
+	b.Position = UDim2.new(.5,0,0,0)
+	b.BackgroundTransparency = 1
+	b.Text = value
+	b.TextColor3 = Color3.fromRGB(255,211,55)
+	b.TextSize = 12
+	b.Font = Enum.Font.Gotham
+	b.TextXAlignment = Enum.TextXAlignment.Right
+	b.Parent = frame
+end
+
+-- HOME
+local function showHome()
+
+	clearContent()
+
+	title.Text = "Home"
+	subtitle.Text = "Player information"
+
+	makeInfo("👤 Player",player.DisplayName,80)
+	makeInfo("🆔 Username","@"..player.Name,145)
+	makeInfo("🔢 User ID",tostring(player.UserId),210)
+
+	local device = "Unknown"
+
+	if UIS.TouchEnabled and not UIS.KeyboardEnabled then
+		device = "📱 Mobile"
+	elseif UIS.KeyboardEnabled and UIS.MouseEnabled then
+		device = "🖥️ PC"
+	elseif UIS.TouchEnabled then
+		device = "📱 Touch"
+	end
+
+	makeInfo("📱 Device",device,275)
+end
+
+-- SETTINGS
+local function showSettings()
+
+	clearContent()
+
+	title.Text = "Settings"
+	subtitle.Text = "Interface settings"
+
+	-- Để trống theo yêu cầu
+end
+
+-- VIP PAGE
+local function showVIP()
+
+	clearContent()
+
+	title.Text = "VIP Features"
+	subtitle.Text = "Premium features for your game"
+
+	local info = Instance.new("TextLabel")
+	info.Size = UDim2.new(1,-5,0,70)
+	info.Position = UDim2.fromOffset(0,80)
+	info.BackgroundColor3 = Color3.fromRGB(24,24,32)
+	info.Text = "👑  VIP FEATURES\n\nCác tính năng sẽ được thêm ở PART 2."
+	info.TextColor3 = Color3.fromRGB(230,230,235)
+	info.TextSize = 14
+	info.Font = Enum.Font.GothamBold
+	info.TextWrapped = true
+	info.Parent = content
+
+	Instance.new("UICorner",info).CornerRadius = UDim.new(0,11)
+end
+
+-- ABOUT
+local function showAbout()
+
+	clearContent()
+
+	title.Text = "About"
+	subtitle.Text = "QuocAnh VIP"
+
+	makeInfo("👑 Hub","QUOCANH VIP",80)
+	makeInfo("📦 Version","1.0",145)
+	makeInfo("🎮 Platform","Roblox Studio",210)
+end
+
+-- TABS
+local tabs = {}
+
+local function makeTab(text,icon,y,callback)
+
+	local button = Instance.new("TextButton")
+
+	button.Size = UDim2.new(1,-20,0,45)
+	button.Position = UDim2.fromOffset(10,y)
+
+	button.BackgroundColor3 = Color3.fromRGB(20,20,27)
+	button.BorderSizePixel = 0
+
+	button.Text = "  "..icon.."   "..text
+	button.TextColor3 = Color3.fromRGB(185,185,195)
+	button.TextSize = 13
+	button.Font = Enum.Font.GothamBold
+	button.TextXAlignment = Enum.TextXAlignment.Left
+	button.AutoButtonColor = false
+	button.Parent = sidebar
+
+	Instance.new("UICorner",button).CornerRadius = UDim.new(0,9)
+
+	tabs[button] = true
+
+	button.Activated:Connect(function()
+
+		for other in pairs(tabs) do
+			other.BackgroundColor3 = Color3.fromRGB(20,20,27)
+			other.TextColor3 = Color3.fromRGB(185,185,195)
+		end
+
+		button.BackgroundColor3 = Color3.fromRGB(255,205,50)
+		button.TextColor3 = Color3.fromRGB(20,20,20)
+
+		callback()
+	end)
+
+	return button
+end
+
+local homeTab = makeTab("Home","⌂",100,showHome)
+makeTab("Settings","⚙",150,showSettings)
+makeTab("VIP","★",200,showVIP)
+makeTab("About","ⓘ",250,showAbout)
+
+homeTab.BackgroundColor3 = Color3.fromRGB(255,205,50)
+homeTab.TextColor3 = Color3.fromRGB(20,20,20)
+
+showHome()
+
+-- DRAG MENU
+local dragging = false
+local dragStart
+local startPosition
+
+main.InputBegan:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragging = true
+		dragStart = input.Position
+		startPosition = main.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(input)
+
+	if not dragging then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+	or input.UserInputType == Enum.UserInputType.Touch then
+
+		local delta = input.Position - dragStart
+
+		main.Position = UDim2.new(
+			startPosition.X.Scale,
+			startPosition.X.Offset + delta.X,
+			startPosition.Y.Scale,
+			startPosition.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function(input)
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+	or input.UserInputType == Enum.UserInputType.Touch then
+
+		dragging = false
+	end
+end)
+local RunService = game:GetService("RunService")
+
+--==================================================
+-- VIP VARIABLES
+--==================================================
+
+local speedEnabled = false
+local jumpEnabled = false
+local infiniteJumpEnabled = false
+local noclipEnabled = false
+local espEnabled = false
+
+local speedValue = 16
+local jumpValue = 50
+
+local espObjects = {}
+
+--==================================================
+-- TOGGLE UI
+--==================================================
+
+local function makeToggle(text, description, y, callback)
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,-5,0,60)
+	frame.Position = UDim2.fromOffset(0,y)
+	frame.BackgroundColor3 = Color3.fromRGB(24,24,32)
+	frame.BorderSizePixel = 0
+	frame.Parent = content
+
+	Instance.new("UICorner",frame).CornerRadius = UDim.new(0,11)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,-100,0,25)
+	label.Position = UDim2.fromOffset(15,7)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = Color3.fromRGB(235,235,240)
+	label.TextSize = 13
+	label.Font = Enum.Font.GothamBold
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+
+	local desc = Instance.new("TextLabel")
+	desc.Size = UDim2.new(1,-100,0,18)
+	desc.Position = UDim2.fromOffset(15,32)
+	desc.BackgroundTransparency = 1
+	desc.Text = description
+	desc.TextColor3 = Color3.fromRGB(115,115,125)
+	desc.TextSize = 9
+	desc.Font = Enum.Font.Gotham
+	desc.TextXAlignment = Enum.TextXAlignment.Left
+	desc.Parent = frame
+
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.fromOffset(48,26)
+	button.Position = UDim2.new(1,-65,.5,-13)
+	button.BackgroundColor3 = Color3.fromRGB(55,55,65)
+	button.BorderSizePixel = 0
+	button.Text = ""
+	button.AutoButtonColor = false
+	button.Parent = frame
+
+	Instance.new("UICorner",button).CornerRadius = UDim.new(1,0)
+
+	local dot = Instance.new("Frame")
+	dot.Size = UDim2.fromOffset(20,20)
+	dot.Position = UDim2.fromOffset(3,3)
+	dot.BackgroundColor3 = Color3.fromRGB(225,225,230)
+	dot.BorderSizePixel = 0
+	dot.Parent = button
+
+	Instance.new("UICorner",dot).CornerRadius = UDim.new(1,0)
+
+	local enabled = false
+
+	local function update()
+
+		button.BackgroundColor3 =
+			enabled
+			and Color3.fromRGB(255,205,50)
+			or Color3.fromRGB(55,55,65)
+
+		dot.Position =
+			enabled
+			and UDim2.fromOffset(25,3)
+			or UDim2.fromOffset(3,3)
+
+	end
+
+	button.Activated:Connect(function()
+
+		enabled = not enabled
+
+		update()
+
+		if callback then
+			callback(enabled)
+		end
+
+	end)
+
+end
+
+--==================================================
+-- SLIDER
+--==================================================
+
+local function makeSlider(text,minValue,maxValue,defaultValue,y,callback)
+
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1,-5,0,55)
+	frame.Position = UDim2.fromOffset(0,y)
+	frame.BackgroundColor3 = Color3.fromRGB(24,24,32)
+	frame.BorderSizePixel = 0
+	frame.Parent = content
+
+	Instance.new("UICorner",frame).CornerRadius = UDim.new(0,11)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1,-30,0,22)
+	label.Position = UDim2.fromOffset(15,5)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.fromRGB(210,210,220)
+	label.TextSize = 12
+	label.Font = Enum.Font.GothamBold
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+
+	local slider = Instance.new("TextButton")
+	slider.Size = UDim2.new(1,-30,0,8)
+	slider.Position = UDim2.fromOffset(15,35)
+	slider.BackgroundColor3 = Color3.fromRGB(45,45,55)
+	slider.BorderSizePixel = 0
+	slider.Text = ""
+	slider.Parent = frame
+
+	Instance.new("UICorner",slider).CornerRadius = UDim.new(1,0)
+
+	local fill = Instance.new("Frame")
+	fill.Size = UDim2.new(0,0,1,0)
+	fill.BackgroundColor3 = Color3.fromRGB(255,205,50)
+	fill.BorderSizePixel = 0
+	fill.Parent = slider
+
+	Instance.new("UICorner",fill).CornerRadius = UDim.new(1,0)
+
+	local draggingSlider = false
+
+	local function update(value)
+
+		value = math.clamp(
+			value,
+			minValue,
+			maxValue
+		)
+
+		local alpha =
+			(value-minValue) /
+			(maxValue-minValue)
+
+		fill.Size =
+			UDim2.new(alpha,0,1,0)
+
+		label.Text =
+			text.." : "..math.floor(value)
+
+		if callback then
+			callback(value)
+		end
+
+	end
+
+	local function move(input)
+
+		local x =
+			input.Position.X -
+			slider.AbsolutePosition.X
+
+		local alpha =
+			math.clamp(
+				x / slider.AbsoluteSize.X,
+				0,
+				1
+			)
+
+		update(
+			minValue +
+			(maxValue-minValue)*alpha
+		)
+
+	end
+
+	slider.InputBegan:Connect(function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1
+			or input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			draggingSlider = true
+			move(input)
+
+		end
+
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+
+		if draggingSlider then
+
+			if input.UserInputType ==
+				Enum.UserInputType.MouseMovement
+				or input.UserInputType ==
+				Enum.UserInputType.Touch then
+
+				move(input)
+
+			end
+
+		end
+
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+
+		if input.UserInputType ==
+			Enum.UserInputType.MouseButton1
+			or input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			draggingSlider = false
+
+		end
+
+	end)
+
+	update(defaultValue)
+
+end
+
+--==================================================
+-- CHARACTER
+--==================================================
+
+local function getCharacter()
+
+	return player.Character
+
+end
+
+local function getHumanoid()
+
+	local character = getCharacter()
+
+	if not character then
+		return nil
+	end
+
+	return character:FindFirstChildOfClass("Humanoid")
+
+end
+
+local function applyMovement()
+
+	local humanoid = getHumanoid()
+
+	if not humanoid then
+		return
+	end
+
+	if speedEnabled then
+		humanoid.WalkSpeed = speedValue
+	else
+		humanoid.WalkSpeed = 16
+	end
+
+	if jumpEnabled then
+		humanoid.JumpPower = jumpValue
+	else
+		humanoid.JumpPower = 50
+	end
+
+end
+
+--==================================================
+-- VIP PAGE
+--==================================================
+
+local oldShowVIP = showVIP
+
+showVIP = function()
+
+	clearContent()
+
+	title.Text = "VIP Features"
+	subtitle.Text = "Premium features for your game"
+
+	-- SPEED
+
+	makeToggle(
+		"🏃 Speed",
+		"Change player movement speed",
+		80,
+		function(on)
+
+			speedEnabled = on
+			applyMovement()
+
+		end
+	)
+
+	makeSlider(
+		"Speed",
+		16,
+		100,
+		16,
+		145,
+		function(value)
+
+			speedValue = value
+			applyMovement()
+
+		end
+	)
+
+	-- JUMP
+
+	makeToggle(
+		"🦘 Jump Boost",
+		"Increase jump power",
+		210,
+		function(on)
+
+			jumpEnabled = on
+			applyMovement()
+
+		end
+	)
+
+	makeSlider(
+		"Jump Power",
+		50,
+		150,
+		50,
+		275,
+		function(value)
+
+			jumpValue = value
+			applyMovement()
+
+		end
+	)
+
+	-- INFINITE JUMP
+
+	makeToggle(
+		"🦅 Infinite Jump",
+		"Jump repeatedly while airborne",
+		340,
+		function(on)
+
+			infiniteJumpEnabled = on
+
+		end
+	)
+
+	-- NOCLIP
+
+	makeToggle(
+		"👻 Noclip",
+		"Disable character collisions",
+		405,
+		function(on)
+
+			noclipEnabled = on
+
+		end
+	)
+
+	-- ESP
+
+	makeToggle(
+		"👁 ESP",
+		"Display player names",
+		470,
+		function(on)
+
+			espEnabled = on
+
+			if not on then
+
+				for _,object in ipairs(espObjects) do
+
+					if object and object.Parent then
+						object:Destroy()
+					end
+
+				end
+
+				espObjects = {}
+
+			end
+
+		end
+	)
+
+end
+
+--==================================================
+-- INFINITE JUMP
+--==================================================
+
+UIS.JumpRequest:Connect(function()
+
+	if not infiniteJumpEnabled then
+		return
+	end
+
+	local humanoid = getHumanoid()
+
+	if humanoid and humanoid.Health > 0 then
+
+		humanoid:ChangeState(
+			Enum.HumanoidStateType.Jumping
+		)
+
+	end
+
+end)
+
+--==================================================
+-- NOCLIP
+--==================================================
+
+RunService.Stepped:Connect(function()
+
+	if not noclipEnabled then
+		return
+	end
+
+	local character = getCharacter()
+
+	if not character then
+		return
+	end
+
+	for _,part in ipairs(
+		character:GetDescendants()
+	) do
+
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+		end
+
+	end
+
+end)
+
+--==================================================
+-- ESP
+--==================================================
+
+local function createESP(other)
+
+	if other == player then
+		return
+	end
+
+	local character = other.Character
+
+	if not character then
+		return
+	end
+
+	local head = character:FindFirstChild("Head")
+
+	if not head then
+		return
+	end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "QuocAnhESP"
+	billboard.Size = UDim2.fromOffset(150,30)
+	billboard.StudsOffset = Vector3.new(0,3,0)
+	billboard.AlwaysOnTop = true
+	billboard.Adornee = head
+	billboard.Parent = gui
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.fromScale(1,1)
+	label.BackgroundTransparency = 1
+	label.Text = other.DisplayName
+	label.TextColor3 = Color3.fromRGB(255,70,70)
+	label.TextSize = 13
+	label.Font = Enum.Font.GothamBold
+	label.TextStrokeTransparency = .25
+	label.Parent = billboard
+
+	table.insert(
+		espObjects,
+		billboard
+	)
+
+end
+
+local function refreshESP()
+
+	for _,object in ipairs(espObjects) do
+
+		if object and object.Parent then
+			object:Destroy()
+		end
+
+	end
+
+	espObjects = {}
+
+	if not espEnabled then
+		return
+	end
+
+	for _,other in ipairs(
+		Players:GetPlayers()
+	) do
+
+		createESP(other)
+
+	end
+
+end
+
+Players.PlayerAdded:Connect(function(other)
+
+	other.CharacterAdded:Connect(function()
+
+		task.wait(.5)
+
+		refreshESP()
+
+	end)
+
+end)
+
+--==================================================
+-- RESPAWN
+--==================================================
+
+player.CharacterAdded:Connect(function()
+
+	task.wait(.5)
+
+	applyMovement()
+
+	if espEnabled then
+		refreshESP()
+	end
+
+end)
+
+--==================================================
+-- OPEN VIP AUTOMATICALLY
+--==================================================
+
+showVIP()
