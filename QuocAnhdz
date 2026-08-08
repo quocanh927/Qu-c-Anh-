@@ -6,7 +6,6 @@ local Lighting = game:GetService("Lighting")
 local VirtualInput = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local GuiService = game:GetService("GuiService")
 
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
@@ -32,23 +31,23 @@ local THEME = {
 local State = {
     MenuOpen = false,
     CurrentTab = 1,  -- 1=Chiến Đấu, 2=Di Chuyển, 3=Hình Ảnh, 4=Misc
-    
+
     -- CHIẾN ĐẤU
     Aimbot = { Enabled = false, FOVCircle = false, FOVSize = 150, Smoothness = 0.96, Prediction = 0.035, Silent = true },
     Hitbox = { Enabled = false, Size = 5 },
-    
+
     -- DI CHUYỂN
     Speed = { Enabled = false, Value = 45 },
     JumpBoost = { Enabled = false, Value = 90 },
     NoClip = false,
     InfinityJump = false,
-    
+
     -- HÌNH ẢNH
     ESP = { Enabled = false, Players = false, Names = false, Box = false, HealthBar = false, Tracers = false },
     Fullbright = false,
     FixLag = false,
-    
-    -- MISC (Thông tin người chơi)
+
+    -- MISC
     GodMode = false,
     AutoRespawn = false,
     AntiAFK = false,
@@ -381,14 +380,14 @@ end)
 -- ===================== COMPONENTS (TOGGLE + SLIDER) =====================
 local function addToggle(parent, text, defaultState, activeColor, callback)
     local row = new("Frame", {
-        Parent = parent, LayoutOrder = parent.Children and (#parent:GetChildren() + 1) or 1,
-        Size = UDim2.new(1, -8, 0, 30),
+        Parent = parent,
+        Size = UDim2.new(1, -8, 0, 28),
         BackgroundTransparency = 1,
     })
 
     local lbl = new("TextLabel", {
         Parent = row, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.7, 0, 1, 0),
+        Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.65, 0, 1, 0),
         Font = Enum.Font.GothamMedium, Text = text, TextSize = 11,
         TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
     })
@@ -396,23 +395,23 @@ local function addToggle(parent, text, defaultState, activeColor, callback)
     local btn = new("TextButton", {
         Parent = row, AutoButtonColor = false,
         AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -4, 0.5, 0), Size = UDim2.fromOffset(40, 20),
+        Position = UDim2.new(1, -4, 0.5, 0), Size = UDim2.fromOffset(38, 18),
         BackgroundColor3 = defaultState and activeColor or THEME.Off,
         BorderSizePixel = 0, Text = "",
     })
-    corner(btn, 10)
+    corner(btn, 9)
 
     local knob = new("Frame", {
-        Parent = btn, Size = UDim2.fromOffset(16, 16),
-        Position = defaultState and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8),
+        Parent = btn, Size = UDim2.fromOffset(14, 14),
+        Position = defaultState and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7),
         BackgroundColor3 = Color3.fromRGB(255, 255, 255), BorderSizePixel = 0,
     })
-    corner(knob, 8)
+    corner(knob, 7)
 
     local state = defaultState
     btn.MouseButton1Click:Connect(function()
         state = not state
-        local p = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
+        local p = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
         local c = state and activeColor or THEME.Off
         tween(knob, 0.12, {Position = p})
         tween(btn, 0.12, {BackgroundColor3 = c})
@@ -424,27 +423,27 @@ end
 
 local function addSlider(parent, text, minVal, maxVal, defaultVal, callback)
     local row = new("Frame", {
-        Parent = parent, LayoutOrder = parent.Children and (#parent:GetChildren() + 1) or 1,
-        Size = UDim2.new(1, -8, 0, 38),
+        Parent = parent,
+        Size = UDim2.new(1, -8, 0, 36),
         BackgroundTransparency = 1,
     })
 
     local lbl = new("TextLabel", {
         Parent = row, BackgroundTransparency = 1,
-        Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.5, 0, 0, 16),
+        Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.5, 0, 0, 14),
         Font = Enum.Font.GothamMedium, Text = text, TextSize = 10,
         TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
     })
 
     local valLbl = new("TextLabel", {
         Parent = row, BackgroundTransparency = 1,
-        Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.new(0.5, -4, 0, 16),
+        Position = UDim2.new(0.5, 0, 0, 0), Size = UDim2.new(0.5, -4, 0, 14),
         Font = Enum.Font.GothamBold, Text = tostring(defaultVal), TextSize = 10,
         TextColor3 = THEME.Accent, TextXAlignment = Enum.TextXAlignment.Right,
     })
 
     local track = new("Frame", {
-        Parent = row, Position = UDim2.new(0, 4, 0, 18), Size = UDim2.new(1, -8, 0, 4),
+        Parent = row, Position = UDim2.new(0, 4, 0, 16), Size = UDim2.new(1, -8, 0, 4),
         BackgroundColor3 = THEME.Off, BorderSizePixel = 0,
     })
     corner(track, 2)
@@ -477,7 +476,7 @@ local function addSlider(parent, text, minVal, maxVal, defaultVal, callback)
 
     local hit = new("TextButton", {
         Parent = row, BackgroundTransparency = 1, Text = "",
-        Position = UDim2.new(0, 0, 0, 16), Size = UDim2.new(1, 0, 0, 20),
+        Position = UDim2.new(0, 0, 0, 14), Size = UDim2.new(1, 0, 0, 20),
         AutoButtonColor = false,
     })
 
@@ -506,9 +505,9 @@ end
 -- ===================== TAB 1: CHIẾN ĐẤU =====================
 local tabCombat = tabFrames[1]
 
--- Aimbot Card
+-- Card Aimbot
 local aimCard = new("Frame", {
-    Parent = tabCombat, LayoutOrder = 1,
+    Parent = tabCombat,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -533,10 +532,6 @@ new("UIPadding", { Parent = aimContent, PaddingLeft = UDim.new(0, 8), PaddingRig
 
 addToggle(aimContent, "Enable Aimbot", false, Color3.fromRGB(220, 0, 255), function(v)
     State.Aimbot.Enabled = v
-    if v then
-        aimbotTarget = nil
-        print("👑 Aimbot enabled")
-    end
 end)
 
 addToggle(aimContent, "FOV Circle (Cầu Vồng)", false, Color3.fromRGB(220, 0, 255), function(v)
@@ -547,9 +542,9 @@ addSlider(aimContent, "FOV Size", 30, 350, 150, function(v)
     State.Aimbot.FOVSize = v
 end)
 
--- Hitbox Card
+-- Card Hitbox
 local hitboxCard = new("Frame", {
-    Parent = tabCombat, LayoutOrder = 2,
+    Parent = tabCombat,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -575,7 +570,6 @@ new("UIPadding", { Parent = hitboxContent, PaddingLeft = UDim.new(0, 8), Padding
 addToggle(hitboxContent, "Enable Hitbox", false, Color3.fromRGB(0, 170, 255), function(v)
     State.Hitbox.Enabled = v
     if v then
-        -- Áp dụng hitbox cho tất cả người chơi
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
                 local root = plr.Character:FindFirstChild("HumanoidRootPart")
@@ -592,7 +586,6 @@ addToggle(hitboxContent, "Enable Hitbox", false, Color3.fromRGB(0, 170, 255), fu
             end
         end
     else
-        -- Khôi phục kích thước gốc
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
                 local root = plr.Character:FindFirstChild("HumanoidRootPart")
@@ -624,9 +617,9 @@ end)
 -- ===================== TAB 2: DI CHUYỂN =====================
 local tabMovement = tabFrames[2]
 
--- Speed Card
+-- Card Speed
 local speedCard = new("Frame", {
-    Parent = tabMovement, LayoutOrder = 1,
+    Parent = tabMovement,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -649,7 +642,7 @@ local speedContent = new("Frame", {
 new("UIListLayout", { Parent = speedContent, Padding = UDim.new(0, 2) })
 new("UIPadding", { Parent = speedContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
-local speedToggle = addToggle(speedContent, "Enable Speed", false, Color3.fromRGB(0, 219, 146), function(v)
+addToggle(speedContent, "Enable Speed", false, Color3.fromRGB(0, 219, 146), function(v)
     State.Speed.Enabled = v
     local hum = getHum()
     if hum then
@@ -665,9 +658,9 @@ addSlider(speedContent, "Speed Value", 16, 100, 45, function(v)
     end
 end)
 
--- JumpBoost Card
+-- Card JumpBoost
 local jumpCard = new("Frame", {
-    Parent = tabMovement, LayoutOrder = 2,
+    Parent = tabMovement,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -690,7 +683,7 @@ local jumpContent = new("Frame", {
 new("UIListLayout", { Parent = jumpContent, Padding = UDim.new(0, 2) })
 new("UIPadding", { Parent = jumpContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
-local jumpToggle = addToggle(jumpContent, "Enable JumpBoost", false, Color3.fromRGB(255, 190, 80), function(v)
+addToggle(jumpContent, "Enable JumpBoost", false, Color3.fromRGB(255, 190, 80), function(v)
     State.JumpBoost.Enabled = v
     local hum = getHum()
     if hum then
@@ -706,44 +699,45 @@ addSlider(jumpContent, "Jump Power", 50, 150, 90, function(v)
     end
 end)
 
--- Movement Misc Card (No Clip + Infinity Jump)
-local moveMiscCard = new("Frame", {
-    Parent = tabMovement, LayoutOrder = 3,
+-- Card Di Chuyển Đặc Biệt
+local specialCard = new("Frame", {
+    Parent = tabMovement,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
-corner(moveMiscCard, 10)
-stroke(moveMiscCard, THEME.Stroke, 1)
-gradient(moveMiscCard, THEME.Card2, THEME.Card, 90)
+corner(specialCard, 10)
+stroke(specialCard, THEME.Stroke, 1)
+gradient(specialCard, THEME.Card2, THEME.Card, 90)
 
 new("TextLabel", {
-    Parent = moveMiscCard, BackgroundTransparency = 1,
+    Parent = specialCard, BackgroundTransparency = 1,
     Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
     Font = Enum.Font.GothamBold, Text = "⚡ DI CHUYỂN ĐẶC BIỆT", TextSize = 12,
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
-local moveMiscContent = new("Frame", {
-    Parent = moveMiscCard,
+local specialContent = new("Frame", {
+    Parent = specialCard,
     Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
     AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
 })
-new("UIListLayout", { Parent = moveMiscContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = moveMiscContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
+new("UIListLayout", { Parent = specialContent, Padding = UDim.new(0, 2) })
+new("UIPadding", { Parent = specialContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
-addToggle(moveMiscContent, "No Clip", false, Color3.fromRGB(255, 0, 127), function(v)
+addToggle(specialContent, "No Clip", false, Color3.fromRGB(255, 0, 127), function(v)
     State.NoClip = v
 end)
 
-addToggle(moveMiscContent, "🦅 Infinity Jump", false, Color3.fromRGB(0, 150, 255), function(v)
+addToggle(specialContent, "🦅 Infinity Jump", false, Color3.fromRGB(0, 150, 255), function(v)
     State.InfinityJump = v
 end)
+
 -- ===================== TAB 3: HÌNH ẢNH =====================
 local tabVisuals = tabFrames[3]
 
--- ESP Card
+-- Card ESP
 local espCard = new("Frame", {
-    Parent = tabVisuals, LayoutOrder = 1,
+    Parent = tabVisuals,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -769,7 +763,6 @@ new("UIPadding", { Parent = espContent, PaddingLeft = UDim.new(0, 8), PaddingRig
 addToggle(espContent, "Enable ESP", false, Color3.fromRGB(0, 255, 127), function(v)
     State.ESP.Enabled = v
     if not v then
-        -- Xóa ESP objects
         for _, obj in ipairs(espObjects) do
             if obj and obj.Parent then obj:Destroy() end
         end
@@ -797,57 +790,54 @@ addToggle(espContent, "Tracers", false, Color3.fromRGB(0, 255, 127), function(v)
     State.ESP.Tracers = v
 end)
 
--- Visuals Card (Fullbright + Fix Lag)
-local visCard = new("Frame", {
-    Parent = tabVisuals, LayoutOrder = 2,
+-- Card Hiệu Ứng
+local effectCard = new("Frame", {
+    Parent = tabVisuals,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
-corner(visCard, 10)
-stroke(visCard, THEME.Stroke, 1)
-gradient(visCard, THEME.Card2, THEME.Card, 90)
+corner(effectCard, 10)
+stroke(effectCard, THEME.Stroke, 1)
+gradient(effectCard, THEME.Card2, THEME.Card, 90)
 
 new("TextLabel", {
-    Parent = visCard, BackgroundTransparency = 1,
+    Parent = effectCard, BackgroundTransparency = 1,
     Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
     Font = Enum.Font.GothamBold, Text = "💡 HIỆU ỨNG", TextSize = 12,
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
-local visContent = new("Frame", {
-    Parent = visCard,
+local effectContent = new("Frame", {
+    Parent = effectCard,
     Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
     AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
 })
-new("UIListLayout", { Parent = visContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = visContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
+new("UIListLayout", { Parent = effectContent, Padding = UDim.new(0, 2) })
+new("UIPadding", { Parent = effectContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
-addToggle(visContent, "☀️ Fullbright", false, Color3.fromRGB(255, 190, 80), function(v)
+addToggle(effectContent, "☀️ Fullbright", false, Color3.fromRGB(255, 190, 80), function(v)
     State.Fullbright = v
     Lighting.Brightness = v and 2 or 1
     Lighting.ClockTime = v and 12 or 9
 end)
 
-addToggle(visContent, "🔧 Fix Lag", false, Color3.fromRGB(0, 219, 146), function(v)
+addToggle(effectContent, "🔧 Fix Lag", false, Color3.fromRGB(0, 219, 146), function(v)
     State.FixLag = v
     if v then
-        -- Tắt các hiệu ứng gây lag
         for _, obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Smoke") or obj:IsA("Fire") or obj:IsA("Sparkles") then
                 pcall(function() obj.Enabled = false end)
             end
         end
         pcall(function() Lighting.GlobalShadows = false end)
-    else
-        -- Không khôi phục, giữ nguyên
     end
 end)
 -- ===================== TAB 4: MISC (THÔNG TIN NGƯỜI CHƠI) =====================
 local tabMisc = tabFrames[4]
 
--- Player Info Card
+-- Card Thông Tin
 local infoCard = new("Frame", {
-    Parent = tabMisc, LayoutOrder = 1,
+    Parent = tabMisc,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
@@ -870,36 +860,36 @@ local infoContent = new("Frame", {
 new("UIListLayout", { Parent = infoContent, Padding = UDim.new(0, 2) })
 new("UIPadding", { Parent = infoContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
--- Hiển thị tên người chơi
-local nameLabel = new("TextLabel", {
-    Parent = infoContent, LayoutOrder = 1,
+-- Tên
+new("TextLabel", {
+    Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
     BackgroundTransparency = 1,
     Font = Enum.Font.GothamBold, Text = "Tên: " .. LocalPlayer.Name, TextSize = 11,
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Hiển thị UserId
-local idLabel = new("TextLabel", {
-    Parent = infoContent, LayoutOrder = 2,
+-- ID
+new("TextLabel", {
+    Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham, Text = "ID: " .. LocalPlayer.UserId, TextSize = 10,
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Hiển thị DisplayName (tên hiển thị)
-local displayLabel = new("TextLabel", {
-    Parent = infoContent, LayoutOrder = 3,
+-- Display Name
+new("TextLabel", {
+    Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham, Text = "Tên hiển thị: " .. LocalPlayer.DisplayName, TextSize = 10,
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
--- Hiển thị Account Age (ngày tạo)
+-- Ngày tạo (sẽ cập nhật sau)
 local ageLabel = new("TextLabel", {
-    Parent = infoContent, LayoutOrder = 4,
+    Parent = infoContent,
     Size = UDim2.new(1, 0, 0, 20),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham, Text = "Ngày tạo: Đang tải...", TextSize = 10,
@@ -912,40 +902,45 @@ spawn(function()
         return game:HttpGet("https://users.roblox.com/v1/users/" .. LocalPlayer.UserId)
     end)
     if success and data then
-        local json = game:GetService("HttpService"):JSONDecode(data)
+        local json = HttpService:JSONDecode(data)
         if json and json.created then
-            local date = os.date("%d/%m/%Y", os.time({year=tonumber(string.sub(json.created,1,4)), month=tonumber(string.sub(json.created,6,7)), day=tonumber(string.sub(json.created,9,10))}))
+            local date = os.date("%d/%m/%Y", os.time({
+                year = tonumber(string.sub(json.created, 1, 4)),
+                month = tonumber(string.sub(json.created, 6, 7)),
+                day = tonumber(string.sub(json.created, 9, 10))
+            }))
             ageLabel.Text = "Ngày tạo: " .. date
         end
     end
 end)
 
--- Misc Functions Card
-local miscFuncCard = new("Frame", {
-    Parent = tabMisc, LayoutOrder = 2,
+-- Card Tiện Ích
+local utilCard = new("Frame", {
+    Parent = tabMisc,
     Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
     BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
 })
-corner(miscFuncCard, 10)
-stroke(miscFuncCard, THEME.Stroke, 1)
-gradient(miscFuncCard, THEME.Card2, THEME.Card, 90)
+corner(utilCard, 10)
+stroke(utilCard, THEME.Stroke, 1)
+gradient(utilCard, THEME.Card2, THEME.Card, 90)
 
 new("TextLabel", {
-    Parent = miscFuncCard, BackgroundTransparency = 1,
+    Parent = utilCard, BackgroundTransparency = 1,
     Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
     Font = Enum.Font.GothamBold, Text = "⚙️ TIỆN ÍCH", TextSize = 12,
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
-local miscContent = new("Frame", {
-    Parent = miscFuncCard,
+local utilContent = new("Frame", {
+    Parent = utilCard,
     Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
     AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
 })
-new("UIListLayout", { Parent = miscContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = miscContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
+new("UIListLayout", { Parent = utilContent, Padding = UDim.new(0, 2) })
+new("UIPadding", { Parent = utilContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
 
-addToggle(miscContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255, 50, 50), function(v)
+-- God Mode (trang trí)
+addToggle(utilContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255, 50, 50), function(v)
     State.GodMode = v
     if v then
         local hum = getHum()
@@ -953,21 +948,20 @@ addToggle(miscContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255
             hum.MaxHealth = 9e9
             hum.Health = 9e9
         end
-        print("👑 God Mode bật (chỉ trang trí, không có tác dụng thực tế)")
     end
 end)
 
-addToggle(miscContent, "Auto Respawn", false, Color3.fromRGB(0, 150, 255), function(v)
+addToggle(utilContent, "Auto Respawn", false, Color3.fromRGB(0, 150, 255), function(v)
     State.AutoRespawn = v
 end)
 
-addToggle(miscContent, "Anti AFK", false, Color3.fromRGB(255, 190, 80), function(v)
+addToggle(utilContent, "Anti AFK", false, Color3.fromRGB(255, 190, 80), function(v)
     State.AntiAFK = v
 end)
 
 -- Nút Join New Server
 local joinBtn = new("TextButton", {
-    Parent = miscContent, LayoutOrder = 100,
+    Parent = utilContent,
     Size = UDim2.new(1, 0, 0, 28),
     BackgroundColor3 = THEME.Card2, BorderSizePixel = 0,
     Font = Enum.Font.GothamBold, Text = "🌐 JOIN NEW SERVER", TextSize = 11,
@@ -981,7 +975,7 @@ end)
 
 -- Nút Destroy
 local destroyBtn = new("TextButton", {
-    Parent = miscContent, LayoutOrder = 101,
+    Parent = utilContent,
     Size = UDim2.new(1, 0, 0, 28),
     BackgroundColor3 = THEME.Card2, BorderSizePixel = 0,
     Font = Enum.Font.GothamBold, Text = "💀 DESTROY", TextSize = 11,
@@ -1001,10 +995,7 @@ destroyBtn.MouseButton1Click:Connect(function()
     end
     print("👑 Quốc Anh Hub đã bị hủy!")
 end)
-
-print("👑 Quốc Anh Hub - Phần 6/6 đã tải! (Tab Misc)")
-
--- ===================== AIMBOT LOGIC (KHÔNG MẤT DI CHUYỂN/NHẢY) =====================
+-- ===================== AIMBOT LOGIC (KHÔNG MẤT DI CHUYỂN TRÊN MOBILE) =====================
 local FOVring = Drawing.new("Circle")
 FOVring.Visible = false
 FOVring.Thickness = 2
@@ -1026,7 +1017,6 @@ local function updateFOVCircle()
     end
 end
 
--- Tìm target gần nhất (chỉ người chơi)
 local function findNearestTarget()
     local nearest = nil
     local nearestDist = math.huge
@@ -1085,8 +1075,7 @@ local function shoot()
     end
 end
 
--- AIMBOT LOOP (CHỈ XOAY CAMERA KHI CÓ TOUCH HOẶC NHẤN GIỮ)
-local aimbotConnection = RunService.Heartbeat:Connect(function()
+RunService.Heartbeat:Connect(function()
     updateFOVCircle()
     
     if not State.Aimbot.Enabled then
@@ -1094,7 +1083,6 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
         return
     end
 
-    -- Kiểm tra target còn sống
     if not isTargetAlive(aimbotTarget) then
         aimbotTarget = findNearestTarget()
     end
@@ -1109,7 +1097,6 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
         return
     end
 
-    -- Lấy vị trí target
     local char = aimbotTarget.Character
     local root = char and char:FindFirstChild("HumanoidRootPart")
     local head = char and char:FindFirstChild("Head")
@@ -1119,16 +1106,13 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
         return
     end
 
-    -- Dự đoán vị trí
     local pos = aimPart.Position
     local velocity = root and root.Velocity or Vector3.new()
     local predictedPos = pos + velocity * State.Aimbot.Prediction
-    
-    -- Xoay camera (CHỈ KHI CÓ TOUCH HOẶC ĐANG NHẤN GIỮ)
-    -- Kiểm tra nếu người chơi đang chạm vào màn hình hoặc đang di chuyển
+
+    -- Kiểm tra touch (chỉ xoay camera khi có touch trên mobile)
     local isTouching = false
     if UserInputService.TouchEnabled then
-        -- Kiểm tra xem có touch đang hoạt động không
         for _, touch in ipairs(UserInputService:GetTouchInputs()) do
             if touch.UserInputState == Enum.UserInputState.Begin or touch.UserInputState == Enum.UserInputState.Change then
                 isTouching = true
@@ -1136,8 +1120,7 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
             end
         end
     end
-    
-    -- Nếu đang chạm hoặc trên PC (chuột), xoay camera
+
     if isTouching or not UserInputService.TouchEnabled then
         local currentCF = camera.CFrame
         local targetDirection = (predictedPos - currentCF.Position).Unit
@@ -1145,7 +1128,6 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
         camera.CFrame = CFrame.new(currentCF.Position, currentCF.Position + newLookVector)
     end
 
-    -- Tự động bắn nếu target ở trong tâm
     local screenPos, onScreen = camera:WorldToViewportPoint(predictedPos)
     if onScreen then
         local center = camera.ViewportSize / 2
@@ -1156,7 +1138,7 @@ local aimbotConnection = RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ===================== INFINITY JUMP LOGIC =====================
+-- ===================== INFINITY JUMP =====================
 UserInputService.JumpRequest:Connect(function()
     if State.InfinityJump then
         local hum = getHum()
@@ -1166,7 +1148,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ===================== NOCLIP LOGIC =====================
+-- ===================== NOCLIP =====================
 RunService.Stepped:Connect(function()
     if State.NoClip then
         local char = LocalPlayer.Character
@@ -1180,14 +1162,13 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- ===================== GOD MODE LOGIC =====================
+-- ===================== GOD MODE & AUTO RESPAWN =====================
 LocalPlayer.CharacterAdded:Connect(function(char)
     if State.GodMode then
         local hum = char:WaitForChild("Humanoid")
         hum.MaxHealth = 9e9
         hum.Health = 9e9
     end
-    -- Auto Respawn
     if State.AutoRespawn then
         local hum = char:WaitForChild("Humanoid")
         hum:GetPropertyChangedSignal("Health"):Connect(function()
@@ -1207,7 +1188,7 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- ===================== ANTI AFK LOGIC =====================
+-- ===================== ANTI AFK =====================
 RunService.Heartbeat:Connect(function()
     if State.AntiAFK then
         VirtualInput:SendKeyEvent(true, Enum.KeyCode.W, false, game)
@@ -1218,7 +1199,6 @@ end)
 
 -- ===================== ESP LOGIC =====================
 local function updateESP()
-    -- Xóa ESP cũ
     for _, obj in ipairs(espObjects) do
         if obj and obj.Parent then obj:Destroy() end
     end
@@ -1232,7 +1212,6 @@ local function updateESP()
             local hum = char:FindFirstChildOfClass("Humanoid")
             local root = char:FindFirstChild("HumanoidRootPart")
             if hum and hum.Health > 0 and root then
-                -- Box ESP
                 if State.ESP.Box then
                     local box = Instance.new("BoxHandleAdornment")
                     box.Size = Vector3.new(4, 5, 2)
@@ -1244,7 +1223,6 @@ local function updateESP()
                     box.Parent = root
                     table.insert(espObjects, box)
                 end
-                -- Name ESP
                 if State.ESP.Names then
                     local billboard = Instance.new("BillboardGui")
                     billboard.Size = UDim2.new(0, 150, 0, 20)
@@ -1262,7 +1240,6 @@ local function updateESP()
                     label.Parent = billboard
                     table.insert(espObjects, billboard)
                 end
-                -- Health Bar
                 if State.ESP.HealthBar then
                     local hpBar = Instance.new("BillboardGui")
                     hpBar.Size = UDim2.new(0, 50, 0, 4)
@@ -1287,7 +1264,6 @@ local function updateESP()
                     bar.BackgroundColor3 = healthPercent > 0.5 and Color3.fromRGB(0, 255, 0) or (healthPercent > 0.25 and Color3.fromRGB(255, 200, 0) or Color3.fromRGB(255, 0, 0))
                     table.insert(espObjects, hpBar)
                 end
-                -- Tracers
                 if State.ESP.Tracers then
                     local tracer = Instance.new("LineHandleAdornment")
                     tracer.Length = 10
@@ -1306,25 +1282,6 @@ end
 
 RunService.Heartbeat:Connect(function()
     updateESP()
-end)
-
--- ===================== RAINBOW ROTATION =====================
-local angle = 0
-RunService.RenderStepped:Connect(function(dt)
-    angle = (angle + dt * 90) % 360
-    for _, g in ipairs(rainbowGradients) do
-        if g and g.Parent then g.Rotation = angle end
-    end
-end)
-
--- ===================== KEYBIND RIGHT SHIFT =====================
-UserInputService.InputBegan:Connect(function(input, gp)
-    if gp then return end
-    if input.KeyCode == Enum.KeyCode.RightShift then
-        State.MenuOpen = not State.MenuOpen
-        root.Visible = State.MenuOpen
-        fab.Visible = not State.MenuOpen
-    end
 end)
 
 -- ===================== HITBOX LISTENER =====================
@@ -1347,7 +1304,30 @@ Players.PlayerAdded:Connect(function(plr)
     end)
 end)
 
+-- ===================== RAINBOW ROTATION =====================
+local angle = 0
+RunService.RenderStepped:Connect(function(dt)
+    angle = (angle + dt * 90) % 360
+    for _, g in ipairs(rainbowGradients) do
+        if g and g.Parent then g.Rotation = angle end
+    end
+end)
+
+-- ===================== KEYBIND RIGHT SHIFT =====================
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        State.MenuOpen = not State.MenuOpen
+        root.Visible = State.MenuOpen
+        fab.Visible = not State.MenuOpen
+    end
+end)
+
+-- ===================== KHỞI TẠO =====================
+-- Mặc định menu đóng, nút QA hiện
+root.Visible = false
+fab.Visible = true
+
 print("👑 Quốc Anh Hub đã tải thành công!")
 print("Tất cả tính năng đều TẮT khi vào game.")
-print("Bấm QA để mở menu.")
-
+print("Bấm QA để mở menu, RightShift để bật/tắt menu.")
