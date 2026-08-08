@@ -336,26 +336,106 @@ for i, name in ipairs(tabNames) do
     table.insert(tabButtons, btn)
 end
 
+-- ===================== SIDEBAR TRÁI (HÀNG DỌC) =====================
+local sidebar = new("Frame", {
+    Parent = main,
+    Position = UDim2.new(0, 0, 0, 53),
+    Size = UDim2.new(0, 80, 0, 1, -85),
+    BackgroundColor3 = THEME.Card,
+    BackgroundTransparency = 0.3,
+    BorderSizePixel = 0,
+    ClipsDescendants = true,
+})
+new("Frame", {
+    Parent = sidebar,
+    Position = UDim2.new(1, -1, 0, 0),
+    Size = UDim2.new(0, 1, 1, 0),
+    BackgroundColor3 = THEME.Stroke,
+    BorderSizePixel = 0,
+})
+
+local sideLayout = new("UIListLayout", {
+    Parent = sidebar,
+    Padding = UDim.new(0, 6),
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
+    VerticalAlignment = Enum.VerticalAlignment.Top,
+})
+new("UIPadding", {
+    Parent = sidebar,
+    PaddingTop = UDim.new(0, 10),
+    PaddingBottom = UDim.new(0, 10),
+})
+
+local tabButtons = {}
+local tabFrames = {}
+local tabNames = {"⚔️", "🏃", "👁️", "ℹ️"}
+local fullNames = {"Chiến Đấu", "Di Chuyển", "Hình Ảnh", "Misc"}
+
+for i, name in ipairs(tabNames) do
+    local btn = new("TextButton", {
+        Parent = sidebar,
+        Size = UDim2.new(0, 60, 0, 44),
+        BackgroundColor3 = (i == 1) and THEME.Accent or Color3.fromRGB(30, 33, 45),
+        BackgroundTransparency = (i == 1) and 0.15 or 0.3,
+        BorderSizePixel = 0,
+        Font = Enum.Font.GothamBold,
+        Text = name,
+        TextSize = 18,
+        TextColor3 = (i == 1) and THEME.Accent or THEME.Dim,
+        AutoButtonColor = false,
+    })
+    corner(btn, 8)
+    stroke(btn, THEME.Stroke, 1)
+
+    local tip = new("TextLabel", {
+        Parent = btn,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 0, 1, 2),
+        Size = UDim2.new(1, 0, 0, 12),
+        Font = Enum.Font.GothamMedium,
+        Text = fullNames[i],
+        TextSize = 7,
+        TextColor3 = THEME.Dim,
+        TextXAlignment = Enum.TextXAlignment.Center,
+    })
+
+    btn.MouseButton1Click:Connect(function()
+        State.CurrentTab = i
+        for j, b in ipairs(tabButtons) do
+            local isActive = (j == i)
+            b.BackgroundColor3 = isActive and THEME.Accent or Color3.fromRGB(30, 33, 45)
+            b.BackgroundTransparency = isActive and 0.15 or 0.3
+            b.TextColor3 = isActive and THEME.Accent or THEME.Dim
+        end
+        for j, f in ipairs(tabFrames) do
+            f.Visible = (j == i)
+        end
+    end)
+
+    table.insert(tabButtons, btn)
+end
+
 -- ===================== CONTENT AREA (BÊN PHẢI) =====================
 local contentArea = new("Frame", {
     Parent = main,
-    Position = UDim2.new(0, 0, 0, 85), 
-    Size = UDim2.new(1, 0, 1, -115),
+    Position = UDim2.new(0, 85, 0, 53),
+    Size = UDim2.new(1, -90, 0, 1, -85),
     BackgroundTransparency = 1,
+    ClipsDescendants = true,
 })
 
--- Tạo 4 frame content (ẩn/hiện)
 for i = 1, 4 do
     local frame = new("Frame", {
         Parent = contentArea,
-        Size = UDim2.new(1, -10, 1, -5),
-        Position = UDim2.new(0, 5, 0, 5),
+        Size = UDim2.new(1, -8, 1, -8),
+        Position = UDim2.new(0, 4, 0, 4),
         BackgroundTransparency = 1,
         Visible = (i == 1),
         ClipsDescendants = true,
     })
     new("UIListLayout", {
-        Parent = frame, 
+        Parent = frame,
         Padding = UDim.new(0, 6),
         SortOrder = Enum.SortOrder.LayoutOrder,
     })
@@ -367,28 +447,11 @@ for i = 1, 4 do
     table.insert(tabFrames, frame)
 end
 
--- ===================== CONTENT AREA (BÊN PHẢI) =====================
-local contentArea = new("Frame", {
-    Parent = main,
-    Position = UDim2.new(0, 0, 0, 85), Size = UDim2.new(1, 0, 1, -115),
-    BackgroundTransparency = 1,
-})
-
--- Tạo các tab content (ẩn/hiện)
-for i = 1, 4 do
-    local frame = new("Frame", {
-        Parent = contentArea,
-        Size = UDim2.new(1, -10, 1, -5),
-        Position = UDim2.new(0, 5, 0, 5),
-        BackgroundTransparency = 1,
-        Visible = (i == 1),
-    })
-    new("UIListLayout", {
-        Parent = frame, Padding = UDim.new(0, 6),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-    })
-    table.insert(tabFrames, frame)
-end
+-- Gán các tab vào frame
+tabCombat = tabFrames[1]
+tabMovement = tabFrames[2]
+tabVisuals = tabFrames[3]
+tabMisc = tabFrames[4]
 
 -- ===================== NÚT QA MỞ MENU =====================
 local fab = new("TextButton", {
