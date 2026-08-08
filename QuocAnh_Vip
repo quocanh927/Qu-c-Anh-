@@ -1,0 +1,1991 @@
+--================================================--
+-- QUOC ANH HUB • MOBILE ONLY
+-- PART 1 / 5
+--================================================--
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "QuocAnhHub"
+Gui.ResetOnSpawn = false
+Gui.IgnoreGuiInset = true
+Gui.Parent = Player:WaitForChild("PlayerGui")
+
+--================================================--
+-- RAINBOW
+--================================================--
+
+local RainbowColors = ColorSequence.new({
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,90)),
+	ColorSequenceKeypoint.new(.16,Color3.fromRGB(255,80,0)),
+	ColorSequenceKeypoint.new(.32,Color3.fromRGB(255,230,0)),
+	ColorSequenceKeypoint.new(.48,Color3.fromRGB(0,255,80)),
+	ColorSequenceKeypoint.new(.64,Color3.fromRGB(0,220,255)),
+	ColorSequenceKeypoint.new(.80,Color3.fromRGB(90,0,255)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,220))
+})
+
+local function RainbowStroke(Object,Thickness)
+
+	local Stroke = Instance.new("UIStroke")
+	Stroke.Thickness = Thickness or 2
+	Stroke.Parent = Object
+
+	local Gradient = Instance.new("UIGradient")
+	Gradient.Color = RainbowColors
+	Gradient.Parent = Stroke
+
+	return Stroke,Gradient
+end
+
+local function RainbowText(Object)
+
+	local Gradient = Instance.new("UIGradient")
+	Gradient.Color = RainbowColors
+	Gradient.Parent = Object
+
+	return Gradient
+end
+
+--================================================--
+-- MAIN
+--================================================--
+
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.fromScale(.90,.76)
+Main.Position = UDim2.fromScale(.5,.5)
+Main.AnchorPoint = Vector2.new(.5,.5)
+Main.BackgroundColor3 = Color3.fromRGB(5,5,9)
+Main.BorderSizePixel = 0
+Main.Parent = Gui
+
+Instance.new("UICorner",Main).CornerRadius =
+	UDim.new(0,18)
+
+local MainStroke,MainGradient =
+	RainbowStroke(Main,2.2)
+
+--================================================--
+-- HEADER
+--================================================--
+
+local Crown = Instance.new("TextLabel")
+Crown.Size = UDim2.fromScale(.08,.10)
+Crown.Position = UDim2.fromScale(.025,.025)
+Crown.BackgroundTransparency = 1
+Crown.Text = "♛"
+Crown.TextSize = 28
+Crown.Font = Enum.Font.GothamBold
+Crown.Parent = Main
+
+RainbowText(Crown)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.fromScale(.55,.07)
+Title.Position = UDim2.fromScale(.105,.035)
+Title.BackgroundTransparency = 1
+Title.Text = "QUỐC ANH HUB"
+Title.TextSize = 19
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Main
+
+RainbowText(Title)
+
+local Sub = Instance.new("TextLabel")
+Sub.Size = UDim2.fromScale(.55,.04)
+Sub.Position = UDim2.fromScale(.107,.087)
+Sub.BackgroundTransparency = 1
+Sub.Text = "THE BEST SCRIPT • ALWAYS UPDATED"
+Sub.TextSize = 8
+Sub.Font = Enum.Font.GothamMedium
+Sub.TextColor3 = Color3.fromRGB(160,160,175)
+Sub.TextXAlignment = Enum.TextXAlignment.Left
+Sub.Parent = Main
+
+--================================================--
+-- CLOSE
+--================================================--
+
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.fromScale(.07,.07)
+Close.Position = UDim2.fromScale(.91,.025)
+Close.BackgroundTransparency = 1
+Close.Text = "×"
+Close.TextSize = 27
+Close.Font = Enum.Font.GothamBold
+Close.TextColor3 = Color3.fromRGB(255,40,170)
+Close.Parent = Main
+
+Close.MouseButton1Click:Connect(function()
+	Gui:Destroy()
+end)
+
+--================================================--
+-- BODY
+--================================================--
+
+local Body = Instance.new("Frame")
+Body.Size = UDim2.fromScale(.95,.82)
+Body.Position = UDim2.fromScale(.025,.15)
+Body.BackgroundTransparency = 1
+Body.Parent = Main
+
+--================================================--
+-- SIDEBAR
+--================================================--
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.fromScale(.245,1)
+Sidebar.BackgroundColor3 = Color3.fromRGB(8,8,14)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = Body
+
+Instance.new("UICorner",Sidebar).CornerRadius =
+	UDim.new(0,13)
+
+local SideStroke,SideGradient =
+	RainbowStroke(Sidebar,1.8)
+
+--================================================--
+-- CONTENT
+--================================================--
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.fromScale(.735,1)
+Content.Position = UDim2.fromScale(.265,0)
+Content.BackgroundTransparency = 1
+Content.Parent = Body
+
+--================================================--
+-- PAGES
+--================================================--
+
+local Pages = {}
+
+local function CreatePage(Name)
+
+	local Page = Instance.new("Frame")
+	Page.Name = Name
+	Page.Size = UDim2.fromScale(1,1)
+	Page.BackgroundTransparency = 1
+	Page.Visible = false
+	Page.Parent = Content
+
+	Pages[Name] = Page
+
+	return Page
+end
+
+CreatePage("HOME")
+CreatePage("AIMBOT")
+CreatePage("VISUALS")
+CreatePage("PLAYER")
+CreatePage("MOVEMENT")
+CreatePage("MISC")
+CreatePage("VIP")
+CreatePage("SETTINGS")
+
+--================================================--
+-- SIDEBAR BUTTONS
+--================================================--
+
+local Tabs = {
+	{"⌂","HOME"},
+	{"◎","AIMBOT"},
+	{"◉","VISUALS"},
+	{"♟","PLAYER"},
+	{"↗","MOVEMENT"},
+	{"⚙","MISC"},
+	{"◆","VIP"},
+	{"⚙","SETTINGS"}
+}
+
+local TabButtons = {}
+
+local function SelectTab(Name)
+
+	for PageName,Page in pairs(Pages) do
+		Page.Visible = PageName == Name
+	end
+
+	for TabName,Button in pairs(TabButtons) do
+
+		if TabName == Name then
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(40,15,50)
+
+			Button.TextColor3 =
+				Color3.fromRGB(255,70,220)
+
+		else
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(8,8,14)
+
+			Button.TextColor3 =
+				Color3.fromRGB(225,225,235)
+		end
+	end
+end
+
+for Index,Data in ipairs(Tabs) do
+
+	local Button = Instance.new("TextButton")
+
+	Button.Size = UDim2.new(.90,0,0,30)
+	Button.Position = UDim2.new(
+		.05,
+		0,
+		0,
+		8 + ((Index-1)*34)
+	)
+
+	Button.BackgroundColor3 =
+		Color3.fromRGB(8,8,14)
+
+	Button.BorderSizePixel = 0
+	Button.AutoButtonColor = false
+
+	Button.Text =
+		Data[1].."   "..Data[2]
+
+	Button.TextSize = 10
+	Button.Font = Enum.Font.GothamBold
+	Button.TextXAlignment =
+		Enum.TextXAlignment.Left
+
+	Button.TextColor3 =
+		Color3.fromRGB(220,220,230)
+
+	Button.Parent = Sidebar
+
+	Instance.new("UICorner",Button).CornerRadius =
+		UDim.new(0,8)
+
+	TabButtons[Data[2]] = Button
+
+	Button.MouseButton1Click:Connect(function()
+		SelectTab(Data[2])
+	end)
+end
+
+--================================================--
+-- PROFILE
+--================================================--
+
+local Profile = Instance.new("Frame")
+Profile.Size = UDim2.new(.90,0,0,52)
+Profile.Position = UDim2.new(.05,0,1,-60)
+Profile.BackgroundColor3 = Color3.fromRGB(10,10,17)
+Profile.BorderSizePixel = 0
+Profile.Parent = Sidebar
+
+Instance.new("UICorner",Profile).CornerRadius =
+	UDim.new(0,10)
+
+local ProfileStroke,ProfileGradient =
+	RainbowStroke(Profile,1.5)
+
+--================================================--
+-- CAT
+--================================================--
+
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.fromOffset(36,36)
+Avatar.Position = UDim2.fromOffset(8,8)
+Avatar.BackgroundColor3 = Color3.fromRGB(25,25,30)
+Avatar.BorderSizePixel = 0
+Avatar.ScaleType = Enum.ScaleType.Crop
+
+Avatar.Image =
+	"rbxassetid://YOUR_CAT_IMAGE_ID"
+
+Avatar.Parent = Profile
+
+Instance.new("UICorner",Avatar).CornerRadius =
+	UDim.new(1,0)
+
+local AvatarStroke,AvatarGradient =
+	RainbowStroke(Avatar,1.5)
+
+--================================================--
+-- NAME
+--================================================--
+
+local Name = Instance.new("TextLabel")
+Name.Size = UDim2.new(0,95,0,18)
+Name.Position = UDim2.fromOffset(52,7)
+Name.BackgroundTransparency = 1
+Name.Text = Player.Name
+Name.TextSize = 10
+Name.Font = Enum.Font.GothamBold
+Name.TextColor3 = Color3.fromRGB(240,240,245)
+Name.TextXAlignment = Enum.TextXAlignment.Left
+Name.Parent = Profile
+
+--================================================--
+-- VIP
+--================================================--
+
+local VIP = Instance.new("TextLabel")
+VIP.Size = UDim2.new(0,95,0,15)
+VIP.Position = UDim2.fromOffset(52,25)
+VIP.BackgroundTransparency = 1
+VIP.Text = "VIP • LIFETIME"
+VIP.TextSize = 8
+VIP.Font = Enum.Font.GothamBold
+VIP.TextXAlignment = Enum.TextXAlignment.Left
+VIP.Parent = Profile
+
+RainbowText(VIP)
+
+--================================================--
+-- ONLINE
+--================================================--
+
+local Online = Instance.new("Frame")
+Online.Size = UDim2.fromOffset(8,8)
+Online.Position = UDim2.new(1,-16,0,10)
+Online.BackgroundColor3 = Color3.fromRGB(0,255,80)
+Online.BorderSizePixel = 0
+Online.Parent = Profile
+
+Instance.new("UICorner",Online).CornerRadius =
+	UDim.new(1,0)
+
+--================================================--
+-- DEFAULT
+--================================================--
+
+SelectTab("HOME")
+
+--================================================--
+-- RAINBOW ANIMATION
+--================================================--
+
+RunService.RenderStepped:Connect(function()
+
+	local Rotation =
+		(tick()*35)%360
+
+	MainGradient.Rotation = Rotation
+	SideGradient.Rotation = Rotation
+	ProfileGradient.Rotation = Rotation
+	AvatarGradient.Rotation = Rotation
+
+end)
+
+--================================================--
+-- TOUCH DRAG
+--================================================--
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Title.InputBegan:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		Dragging = true
+		DragStart = Input.Position
+		StartPosition = Main.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(Input)
+
+	if not Dragging then return end
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		local Delta =
+			Input.Position - DragStart
+
+		Main.Position = UDim2.new(
+			StartPosition.X.Scale,
+			StartPosition.X.Offset + Delta.X,
+			StartPosition.Y.Scale,
+			StartPosition.Y.Offset + Delta.Y
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		Dragging = false
+	end
+end)
+--================================================--
+-- QUOC ANH HUB • PART 2 / 5
+-- HOME + CARDS + RAINBOW CONTROLS
+--================================================--
+
+--================================================--
+-- CARD CREATOR
+--================================================--
+
+local function CreateCard(Parent, Position, Size, Icon, TitleText)
+
+	local Card = Instance.new("Frame")
+	Card.Size = Size
+	Card.Position = Position
+	Card.BackgroundColor3 = Color3.fromRGB(9,9,16)
+	Card.BorderSizePixel = 0
+	Card.Parent = Parent
+
+	Instance.new("UICorner",Card).CornerRadius =
+		UDim.new(0,12)
+
+	local Stroke,Gradient =
+		RainbowStroke(Card,1.5)
+
+	local IconLabel = Instance.new("TextLabel")
+	IconLabel.Size = UDim2.fromOffset(30,30)
+	IconLabel.Position = UDim2.fromOffset(10,8)
+	IconLabel.BackgroundTransparency = 1
+	IconLabel.Text = Icon
+	IconLabel.TextSize = 19
+	IconLabel.Font = Enum.Font.GothamBold
+	IconLabel.Parent = Card
+
+	RainbowText(IconLabel)
+
+	local TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Size = UDim2.new(1,-50,0,28)
+	TitleLabel.Position = UDim2.fromOffset(43,8)
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Text = TitleText
+	TitleLabel.TextSize = 12
+	TitleLabel.Font = Enum.Font.GothamBold
+	TitleLabel.TextColor3 = Color3.fromRGB(235,235,240)
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.Parent = Card
+
+	return Card
+end
+
+
+--================================================--
+-- TOGGLE
+--================================================--
+
+local function CreateToggle(Parent,Text,Y)
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1,-60,0,25)
+	Label.Position = UDim2.fromOffset(12,Y)
+	Label.BackgroundTransparency = 1
+	Label.Text = Text
+	Label.TextSize = 10
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextColor3 = Color3.fromRGB(215,215,225)
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Parent
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.fromOffset(38,20)
+	Button.Position = UDim2.new(1,-50,0,Y+2)
+	Button.BackgroundColor3 = Color3.fromRGB(40,40,50)
+	Button.BorderSizePixel = 0
+	Button.Text = ""
+	Button.AutoButtonColor = false
+	Button.Parent = Parent
+
+	Instance.new("UICorner",Button).CornerRadius =
+		UDim.new(1,0)
+
+	local Dot = Instance.new("Frame")
+	Dot.Size = UDim2.fromOffset(14,14)
+	Dot.Position = UDim2.fromOffset(3,3)
+	Dot.BackgroundColor3 = Color3.fromRGB(225,225,230)
+	Dot.BorderSizePixel = 0
+	Dot.Parent = Button
+
+	Instance.new("UICorner",Dot).CornerRadius =
+		UDim.new(1,0)
+
+	local Enabled = false
+
+	Button.MouseButton1Click:Connect(function()
+
+		Enabled = not Enabled
+
+		if Enabled then
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(255,30,190)
+
+			Dot:TweenPosition(
+				UDim2.new(1,-17,0,3),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+
+			local Glow = Instance.new("UIGradient")
+			Glow.Color = RainbowColors
+			Glow.Parent = Button
+
+		else
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(40,40,50)
+
+			Dot:TweenPosition(
+				UDim2.fromOffset(3,3),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+
+			for _,v in ipairs(Button:GetChildren()) do
+				if v:IsA("UIGradient") then
+					v:Destroy()
+				end
+			end
+		end
+	end)
+
+	return Button
+end
+
+
+--================================================--
+-- RAINBOW SLIDER
+--================================================--
+
+local function CreateSlider(Parent,Text,Y,Min,Max,Default)
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1,-20,0,20)
+	Label.Position = UDim2.fromOffset(12,Y)
+	Label.BackgroundTransparency = 1
+	Label.Text = Text.." : "..Default
+	Label.TextSize = 10
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextColor3 = Color3.fromRGB(215,215,225)
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Parent
+
+	local Bar = Instance.new("Frame")
+	Bar.Size = UDim2.new(1,-24,0,6)
+	Bar.Position = UDim2.fromOffset(12,Y+26)
+	Bar.BackgroundColor3 = Color3.fromRGB(35,35,45)
+	Bar.BorderSizePixel = 0
+	Bar.Parent = Parent
+
+	Instance.new("UICorner",Bar).CornerRadius =
+		UDim.new(1,0)
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.fromScale(
+		(Default-Min)/(Max-Min),
+		1
+	)
+	Fill.BorderSizePixel = 0
+	Fill.Parent = Bar
+
+	Instance.new("UICorner",Fill).CornerRadius =
+		UDim.new(1,0)
+
+	local FillGradient = Instance.new("UIGradient")
+	FillGradient.Color = RainbowColors
+	FillGradient.Parent = Fill
+
+	local Knob = Instance.new("Frame")
+	Knob.Size = UDim2.fromOffset(13,13)
+	Knob.AnchorPoint = Vector2.new(.5,.5)
+	Knob.Position = UDim2.fromScale(
+		(Default-Min)/(Max-Min),
+		.5
+	)
+	Knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	Knob.BorderSizePixel = 0
+	Knob.Parent = Bar
+
+	Instance.new("UICorner",Knob).CornerRadius =
+		UDim.new(1,0)
+
+	local KnobStroke = Instance.new("UIStroke")
+	KnobStroke.Thickness = 1.5
+	KnobStroke.Parent = Knob
+
+	local KnobGradient = Instance.new("UIGradient")
+	KnobGradient.Color = RainbowColors
+	KnobGradient.Parent = KnobStroke
+
+	local DraggingSlider = false
+
+	local function Update(X)
+
+		local Percent = math.clamp(
+			(X-Bar.AbsolutePosition.X) /
+			Bar.AbsoluteSize.X,
+			0,
+			1
+		)
+
+		local Value = math.floor(
+			Min + ((Max-Min)*Percent)
+		)
+
+		Fill.Size =
+			UDim2.fromScale(Percent,1)
+
+		Knob.Position =
+			UDim2.fromScale(Percent,.5)
+
+		Label.Text =
+			Text.." : "..Value
+	end
+
+	Bar.InputBegan:Connect(function(Input)
+
+		if Input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			DraggingSlider = true
+			Update(Input.Position.X)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(Input)
+
+		if not DraggingSlider then
+			return
+		end
+
+		if Input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			Update(Input.Position.X)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(Input)
+
+		if Input.UserInputType ==
+			Enum.UserInputType.Touch then
+
+			DraggingSlider = false
+		end
+	end)
+
+	return Bar
+end
+
+
+--================================================--
+-- HOME
+--================================================--
+
+local Home = Pages.HOME
+
+--================================================--
+-- WELCOME
+--================================================--
+
+local Welcome = Instance.new("Frame")
+Welcome.Size = UDim2.new(1,0,0,70)
+Welcome.Position = UDim2.fromOffset(0,0)
+Welcome.BackgroundColor3 = Color3.fromRGB(9,9,16)
+Welcome.BorderSizePixel = 0
+Welcome.Parent = Home
+
+Instance.new("UICorner",Welcome).CornerRadius =
+	UDim.new(0,13)
+
+local WelcomeStroke,WelcomeGradient =
+	RainbowStroke(Welcome,1.5)
+
+local WelcomeIcon = Instance.new("TextLabel")
+WelcomeIcon.Size = UDim2.fromOffset(45,45)
+WelcomeIcon.Position = UDim2.fromOffset(10,12)
+WelcomeIcon.BackgroundTransparency = 1
+WelcomeIcon.Text = "☆"
+WelcomeIcon.TextSize = 35
+WelcomeIcon.Font = Enum.Font.GothamBold
+WelcomeIcon.Parent = Welcome
+
+RainbowText(WelcomeIcon)
+
+local WelcomeTitle = Instance.new("TextLabel")
+WelcomeTitle.Size = UDim2.new(1,-70,0,25)
+WelcomeTitle.Position = UDim2.fromOffset(58,12)
+WelcomeTitle.BackgroundTransparency = 1
+WelcomeTitle.Text = "WELCOME, "..Player.Name.."!"
+WelcomeTitle.TextSize = 14
+WelcomeTitle.Font = Enum.Font.GothamBold
+WelcomeTitle.TextXAlignment = Enum.TextXAlignment.Left
+WelcomeTitle.Parent = Welcome
+
+RainbowText(WelcomeTitle)
+
+local WelcomeSub = Instance.new("TextLabel")
+WelcomeSub.Size = UDim2.new(1,-70,0,20)
+WelcomeSub.Position = UDim2.fromOffset(60,38)
+WelcomeSub.BackgroundTransparency = 1
+WelcomeSub.Text = "Enjoy the game and have fun!"
+WelcomeSub.TextSize = 9
+WelcomeSub.Font = Enum.Font.Gotham
+WelcomeSub.TextColor3 = Color3.fromRGB(155,155,170)
+WelcomeSub.TextXAlignment = Enum.TextXAlignment.Left
+WelcomeSub.Parent = Welcome
+
+
+--================================================--
+-- AIMBOT CARD
+--================================================--
+
+local AimCard = CreateCard(
+	Home,
+	UDim2.fromScale(0,.19),
+	UDim2.fromScale(.485,.37),
+	"◎",
+	"AIM ASSIST"
+)
+
+CreateToggle(AimCard,"Enable Aim Assist",45)
+CreateToggle(AimCard,"Target Lock",76)
+CreateToggle(AimCard,"Team Check",107)
+CreateSlider(AimCard,"FOV",137,10,300,120)
+
+
+--================================================--
+-- VISUAL CARD
+--================================================--
+
+local VisualCard = CreateCard(
+	Home,
+	UDim2.fromScale(.515,.19),
+	UDim2.fromScale(.485,.37),
+	"◉",
+	"VISUALS"
+)
+
+CreateToggle(VisualCard,"Player ESP",45)
+CreateToggle(VisualCard,"Name ESP",76)
+CreateToggle(VisualCard,"Box ESP",107)
+CreateToggle(VisualCard,"Health Bar",138)
+
+
+--================================================--
+-- PLAYER CARD
+--================================================--
+
+local PlayerCard = CreateCard(
+	Home,
+	UDim2.fromScale(0,.59),
+	UDim2.fromScale(.485,.37),
+	"♟",
+	"PLAYER"
+)
+
+CreateSlider(PlayerCard,"WalkSpeed",45,16,100,16)
+CreateSlider(PlayerCard,"JumpPower",86,50,150,50)
+
+
+--================================================--
+-- MISC CARD
+--================================================--
+
+local MiscCard = CreateCard(
+	Home,
+	UDim2.fromScale(.515,.59),
+	UDim2.fromScale(.485,.37),
+	"⚙",
+	"MISC"
+)
+
+CreateToggle(MiscCard,"Infinity Jump",45)
+CreateToggle(MiscCard,"NoClip",76)
+CreateToggle(MiscCard,"Anti AFK",107)
+CreateToggle(MiscCard,"Rainbow UI",138)
+
+
+--================================================--
+-- RAINBOW ANIMATION
+--================================================--
+
+RunService.RenderStepped:Connect(function()
+
+	local Rotation =
+		(tick()*35)%360
+
+	WelcomeGradient.Rotation = Rotation
+	WelcomeStroke.Transparency = .05
+
+end)
+--================================================--
+-- QUOC ANH HUB • PART 3 / 5
+-- AIMBOT • VISUALS • PLAYER • MOVEMENT
+--================================================--
+
+--================================================--
+-- PAGE HEADER
+--================================================--
+
+local function PageHeader(Page,Icon,TitleText,Description)
+
+	local Header = Instance.new("Frame")
+	Header.Size = UDim2.new(1,0,0,58)
+	Header.BackgroundColor3 = Color3.fromRGB(9,9,16)
+	Header.BorderSizePixel = 0
+	Header.Parent = Page
+
+	Instance.new("UICorner",Header).CornerRadius =
+		UDim.new(0,12)
+
+	local Stroke,Gradient =
+		RainbowStroke(Header,1.5)
+
+	local IconLabel = Instance.new("TextLabel")
+	IconLabel.Size = UDim2.fromOffset(42,42)
+	IconLabel.Position = UDim2.fromOffset(8,8)
+	IconLabel.BackgroundTransparency = 1
+	IconLabel.Text = Icon
+	IconLabel.TextSize = 25
+	IconLabel.Font = Enum.Font.GothamBold
+	IconLabel.Parent = Header
+
+	RainbowText(IconLabel)
+
+	local TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Size = UDim2.new(1,-60,0,23)
+	TitleLabel.Position = UDim2.fromOffset(52,8)
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Text = TitleText
+	TitleLabel.TextSize = 13
+	TitleLabel.Font = Enum.Font.GothamBold
+	TitleLabel.TextColor3 = Color3.fromRGB(240,240,245)
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.Parent = Header
+
+	local DescLabel = Instance.new("TextLabel")
+	DescLabel.Size = UDim2.new(1,-60,0,18)
+	DescLabel.Position = UDim2.fromOffset(53,31)
+	DescLabel.BackgroundTransparency = 1
+	DescLabel.Text = Description
+	DescLabel.TextSize = 8
+	DescLabel.Font = Enum.Font.Gotham
+	DescLabel.TextColor3 = Color3.fromRGB(145,145,160)
+	DescLabel.TextXAlignment = Enum.TextXAlignment.Left
+	DescLabel.Parent = Header
+
+	return Header
+end
+
+
+--================================================--
+-- OPTION CARD
+--================================================--
+
+local function OptionCard(Page,Y,Icon,TitleText,Height)
+
+	local Card = Instance.new("Frame")
+	Card.Size = UDim2.new(1,0,0,Height or 180)
+	Card.Position = UDim2.fromOffset(0,Y)
+	Card.BackgroundColor3 = Color3.fromRGB(8,8,14)
+	Card.BorderSizePixel = 0
+	Card.Parent = Page
+
+	Instance.new("UICorner",Card).CornerRadius =
+		UDim.new(0,12)
+
+	local Stroke,Gradient =
+		RainbowStroke(Card,1.35)
+
+	local IconLabel = Instance.new("TextLabel")
+	IconLabel.Size = UDim2.fromOffset(32,32)
+	IconLabel.Position = UDim2.fromOffset(10,8)
+	IconLabel.BackgroundTransparency = 1
+	IconLabel.Text = Icon
+	IconLabel.TextSize = 18
+	IconLabel.Font = Enum.Font.GothamBold
+	IconLabel.Parent = Card
+
+	RainbowText(IconLabel)
+
+	local TitleLabel = Instance.new("TextLabel")
+	TitleLabel.Size = UDim2.new(1,-55,0,28)
+	TitleLabel.Position = UDim2.fromOffset(45,9)
+	TitleLabel.BackgroundTransparency = 1
+	TitleLabel.Text = TitleText
+	TitleLabel.TextSize = 11
+	TitleLabel.Font = Enum.Font.GothamBold
+	TitleLabel.TextColor3 = Color3.fromRGB(235,235,240)
+	TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	TitleLabel.Parent = Card
+
+	return Card
+end
+
+
+--================================================--
+-- AIMBOT PAGE
+--================================================--
+
+local AimPage = Pages.AIMBOT
+
+PageHeader(
+	AimPage,
+	"◎",
+	"AIM ASSIST",
+	"Target settings and aiming controls"
+)
+
+local AimSettings = OptionCard(
+	AimPage,
+	66,
+	"◎",
+	"AIM SETTINGS",
+	225
+)
+
+CreateToggle(AimSettings,"Enable Aim Assist",48)
+CreateToggle(AimSettings,"Target Lock",79)
+CreateToggle(AimSettings,"Team Check",110)
+CreateToggle(AimSettings,"Visible Target Only",141)
+
+CreateSlider(
+	AimSettings,
+	"FOV",
+	172,
+	10,
+	300,
+	120
+)
+
+
+--================================================--
+-- VISUALS PAGE
+--================================================--
+
+local VisualPage = Pages.VISUALS
+
+PageHeader(
+	VisualPage,
+	"◉",
+	"VISUALS",
+	"Customize player visual indicators"
+)
+
+local VisualSettings = OptionCard(
+	VisualPage,
+	66,
+	"◉",
+	"ESP SETTINGS",
+	225
+)
+
+CreateToggle(VisualSettings,"Player ESP",48)
+CreateToggle(VisualSettings,"Name ESP",79)
+CreateToggle(VisualSettings,"Box ESP",110)
+CreateToggle(VisualSettings,"Health Bar",141)
+CreateToggle(VisualSettings,"Distance",172)
+
+
+--================================================--
+-- PLAYER PAGE
+--================================================--
+
+local PlayerPage = Pages.PLAYER
+
+PageHeader(
+	PlayerPage,
+	"♟",
+	"PLAYER",
+	"Character movement settings"
+)
+
+local PlayerSettings = OptionCard(
+	PlayerPage,
+	66,
+	"♟",
+	"PLAYER SETTINGS",
+	225
+)
+
+CreateSlider(
+	PlayerSettings,
+	"WalkSpeed",
+	48,
+	16,
+	100,
+	16
+)
+
+CreateSlider(
+	PlayerSettings,
+	"JumpPower",
+	90,
+	50,
+	150,
+	50
+)
+
+CreateToggle(
+	PlayerSettings,
+	"Custom Movement",
+	137
+)
+
+CreateToggle(
+	PlayerSettings,
+	"Auto Respawn",
+	168
+)
+
+
+--================================================--
+-- MOVEMENT PAGE
+--================================================--
+
+local MovePage = Pages.MOVEMENT
+
+PageHeader(
+	MovePage,
+	"↗",
+	"MOVEMENT",
+	"Movement and mobility controls"
+)
+
+local MovementSettings = OptionCard(
+	MovePage,
+	66,
+	"↗",
+	"MOVEMENT SETTINGS",
+	225
+)
+
+CreateToggle(
+	MovementSettings,
+	"Infinity Jump",
+	48
+)
+
+CreateToggle(
+	MovementSettings,
+	"NoClip",
+	79
+)
+
+CreateToggle(
+	MovementSettings,
+	"Auto Sprint",
+	110
+)
+
+CreateToggle(
+	MovementSettings,
+	"Air Control",
+	141
+)
+
+CreateSlider(
+	MovementSettings,
+	"Movement Speed",
+	172,
+	16,
+	100,
+	16
+)
+
+
+--================================================--
+-- PAGE ANIMATION
+--================================================--
+
+local PagePositions = {}
+
+for Name,Page in pairs(Pages) do
+
+	PagePositions[Page] =
+		Page.Position
+end
+
+local function AnimatePage(Page)
+
+	if not Page then
+		return
+	end
+
+	Page.Position =
+		UDim2.fromScale(.035,0)
+
+	Page.Visible = true
+
+	TweenService:Create(
+		Page,
+		TweenInfo.new(
+			.18,
+			Enum.EasingStyle.Quart,
+			Enum.EasingDirection.Out
+		),
+		{
+			Position =
+				UDim2.fromScale(0,0)
+		}
+	):Play()
+end
+
+
+--================================================--
+-- REPLACE TAB SELECT
+--================================================--
+
+local OldSelectTab = SelectTab
+
+SelectTab = function(Name)
+
+	for PageName,Page in pairs(Pages) do
+		Page.Visible = false
+	end
+
+	for TabName,Button in pairs(TabButtons) do
+
+		if TabName == Name then
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(40,15,50)
+
+			Button.TextColor3 =
+				Color3.fromRGB(255,70,220)
+
+		else
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(8,8,14)
+
+			Button.TextColor3 =
+				Color3.fromRGB(225,225,235)
+		end
+	end
+
+	AnimatePage(Pages[Name])
+end
+
+SelectTab("HOME")
+
+
+--================================================--
+-- STRONG RAINBOW ANIMATION
+--================================================--
+
+RunService.RenderStepped:Connect(function()
+
+	local Rotation =
+		(tick()*42)%360
+
+	for _,Object in ipairs(Content:GetDescendants()) do
+
+		if Object:IsA("UIGradient") then
+
+			Object.Rotation = Rotation
+
+		end
+	end
+
+	SideGradient.Rotation = Rotation
+	ProfileGradient.Rotation = Rotation
+	AvatarGradient.Rotation = Rotation
+	MainGradient.Rotation = Rotation
+end)
+
+
+--================================================--
+-- TOUCH FEEDBACK
+--================================================--
+
+for _,Button in pairs(TabButtons) do
+
+	Button.TouchTap:Connect(function()
+
+		TweenService:Create(
+			Button,
+			TweenInfo.new(.08),
+			{
+				Size =
+					UDim2.new(.86,0,0,29)
+			}
+		):Play()
+
+		task.delay(.08,function()
+
+			TweenService:Create(
+				Button,
+				TweenInfo.new(.08),
+				{
+					Size =
+						UDim2.new(.90,0,0,30)
+				}
+			):Play()
+		end)
+	end)
+end
+--================================================--
+-- QUOC ANH HUB • PART 4 / 5
+-- MISC • VIP • SETTINGS
+--================================================--
+
+--================================================--
+-- MISC PAGE
+--================================================--
+
+local MiscPage = Pages.MISC
+
+PageHeader(
+	MiscPage,
+	"⚙",
+	"MISC",
+	"Extra interface and game options"
+)
+
+local MiscSettings = OptionCard(
+	MiscPage,
+	66,
+	"⚙",
+	"MISC OPTIONS",
+	225
+)
+
+CreateToggle(
+	MiscSettings,
+	"Anti AFK",
+	48
+)
+
+CreateToggle(
+	MiscSettings,
+	"Auto Respawn",
+	79
+)
+
+CreateToggle(
+	MiscSettings,
+	"Notifications",
+	110
+)
+
+CreateToggle(
+	MiscSettings,
+	"Rainbow UI",
+	141
+)
+
+CreateToggle(
+	MiscSettings,
+	"Compact Interface",
+	172
+)
+
+
+--================================================--
+-- VIP PAGE
+--================================================--
+
+local VIPPage = Pages.VIP
+
+PageHeader(
+	VIPPage,
+	"◆",
+	"VIP",
+	"Premium interface and customization"
+)
+
+local VIPCard = Instance.new("Frame")
+VIPCard.Size = UDim2.new(1,0,0,110)
+VIPCard.Position = UDim2.fromOffset(0,66)
+VIPCard.BackgroundColor3 = Color3.fromRGB(10,8,17)
+VIPCard.BorderSizePixel = 0
+VIPCard.Parent = VIPPage
+
+Instance.new("UICorner",VIPCard).CornerRadius =
+	UDim.new(0,14)
+
+local VIPStroke,VIPGradient =
+	RainbowStroke(VIPCard,2)
+
+local CrownIcon = Instance.new("TextLabel")
+CrownIcon.Size = UDim2.fromOffset(65,65)
+CrownIcon.Position = UDim2.fromOffset(12,20)
+CrownIcon.BackgroundTransparency = 1
+CrownIcon.Text = "♛"
+CrownIcon.TextSize = 48
+CrownIcon.Font = Enum.Font.GothamBold
+CrownIcon.Parent = VIPCard
+
+RainbowText(CrownIcon)
+
+local VIPTitle = Instance.new("TextLabel")
+VIPTitle.Size = UDim2.new(1,-95,0,27)
+VIPTitle.Position = UDim2.fromOffset(85,18)
+VIPTitle.BackgroundTransparency = 1
+VIPTitle.Text = "VIP • LIFETIME"
+VIPTitle.TextSize = 15
+VIPTitle.Font = Enum.Font.GothamBold
+VIPTitle.TextXAlignment = Enum.TextXAlignment.Left
+VIPTitle.Parent = VIPCard
+
+RainbowText(VIPTitle)
+
+local VIPDescription = Instance.new("TextLabel")
+VIPDescription.Size = UDim2.new(1,-95,0,40)
+VIPDescription.Position = UDim2.fromOffset(86,48)
+VIPDescription.BackgroundTransparency = 1
+VIPDescription.Text =
+	"Premium UI • Rainbow effects • Custom settings"
+VIPDescription.TextSize = 9
+VIPDescription.Font = Enum.Font.GothamMedium
+VIPDescription.TextColor3 =
+	Color3.fromRGB(160,160,175)
+VIPDescription.TextWrapped = true
+VIPDescription.TextXAlignment =
+	Enum.TextXAlignment.Left
+VIPDescription.Parent = VIPCard
+
+
+--================================================--
+-- VIP OPTIONS
+--================================================--
+
+local VIPOptions = OptionCard(
+	VIPPage,
+	188,
+	"◆",
+	"VIP OPTIONS",
+	160
+)
+
+CreateToggle(
+	VIPOptions,
+	"Premium Theme",
+	45
+)
+
+CreateToggle(
+	VIPOptions,
+	"Rainbow Text",
+	76
+)
+
+CreateToggle(
+	VIPOptions,
+	"Neon Borders",
+	107
+)
+
+CreateToggle(
+	VIPOptions,
+	"Premium Animation",
+	138
+)
+
+
+--================================================--
+-- SETTINGS PAGE
+--================================================--
+
+local SettingsPage = Pages.SETTINGS
+
+PageHeader(
+	SettingsPage,
+	"⚙",
+	"SETTINGS",
+	"Customize your interface"
+)
+
+local InterfaceSettings = OptionCard(
+	SettingsPage,
+	66,
+	"⚙",
+	"INTERFACE",
+	225
+)
+
+CreateToggle(
+	InterfaceSettings,
+	"Rainbow Borders",
+	45
+)
+
+CreateToggle(
+	InterfaceSettings,
+	"Rainbow Text",
+	76
+)
+
+CreateToggle(
+	InterfaceSettings,
+	"Smooth Animation",
+	107
+)
+
+CreateToggle(
+	InterfaceSettings,
+	"Touch Effects",
+	138
+)
+
+CreateSlider(
+	InterfaceSettings,
+	"UI Scale",
+	169,
+	80,
+	110,
+	100
+)
+
+
+--================================================--
+-- THEME CARD
+--================================================--
+
+local ThemeCard = Instance.new("Frame")
+ThemeCard.Size = UDim2.new(1,0,0,92)
+ThemeCard.Position = UDim2.fromOffset(0,300)
+ThemeCard.BackgroundColor3 = Color3.fromRGB(8,8,14)
+ThemeCard.BorderSizePixel = 0
+ThemeCard.Parent = SettingsPage
+
+Instance.new("UICorner",ThemeCard).CornerRadius =
+	UDim.new(0,12)
+
+local ThemeStroke,ThemeGradient =
+	RainbowStroke(ThemeCard,1.4)
+
+local ThemeTitle = Instance.new("TextLabel")
+ThemeTitle.Size = UDim2.new(1,-24,0,25)
+ThemeTitle.Position = UDim2.fromOffset(12,10)
+ThemeTitle.BackgroundTransparency = 1
+ThemeTitle.Text = "COLOR THEME"
+ThemeTitle.TextSize = 11
+ThemeTitle.Font = Enum.Font.GothamBold
+ThemeTitle.TextColor3 = Color3.fromRGB(235,235,240)
+ThemeTitle.TextXAlignment =
+	Enum.TextXAlignment.Left
+ThemeTitle.Parent = ThemeCard
+
+
+--================================================--
+-- COLOR DOTS
+--================================================--
+
+local Colors = {
+	Color3.fromRGB(255,40,160),
+	Color3.fromRGB(255,80,20),
+	Color3.fromRGB(255,230,20),
+	Color3.fromRGB(20,255,100),
+	Color3.fromRGB(0,220,255),
+	Color3.fromRGB(100,70,255),
+	Color3.fromRGB(220,40,255)
+}
+
+for Index,Color in ipairs(Colors) do
+
+	local Dot = Instance.new("TextButton")
+	Dot.Size = UDim2.fromOffset(25,25)
+	Dot.Position = UDim2.fromOffset(
+		12 + ((Index-1)*34),
+		48
+	)
+
+	Dot.BackgroundColor3 = Color
+	Dot.BorderSizePixel = 0
+	Dot.Text = ""
+	Dot.AutoButtonColor = false
+	Dot.Parent = ThemeCard
+
+	Instance.new("UICorner",Dot).CornerRadius =
+		UDim.new(1,0)
+
+	local DotStroke = Instance.new("UIStroke")
+	DotStroke.Thickness = 1
+	DotStroke.Color =
+		Color3.fromRGB(255,255,255)
+	DotStroke.Transparency = .35
+	DotStroke.Parent = Dot
+
+	Dot.MouseButton1Click:Connect(function()
+
+		TweenService:Create(
+			Dot,
+			TweenInfo.new(.12),
+			{
+				Size = UDim2.fromOffset(29,29)
+			}
+		):Play()
+
+		task.delay(.12,function()
+
+			TweenService:Create(
+				Dot,
+				TweenInfo.new(.12),
+				{
+					Size = UDim2.fromOffset(25,25)
+				}
+			):Play()
+		end)
+	end)
+end
+
+
+--================================================--
+-- ABOUT CARD
+--================================================--
+
+local About = Instance.new("Frame")
+About.Size = UDim2.new(1,0,0,70)
+About.Position = UDim2.fromOffset(0,402)
+About.BackgroundColor3 = Color3.fromRGB(8,8,14)
+About.BorderSizePixel = 0
+About.Parent = SettingsPage
+
+Instance.new("UICorner",About).CornerRadius =
+	UDim.new(0,12)
+
+local AboutStroke,AboutGradient =
+	RainbowStroke(About,1.2)
+
+local AboutText = Instance.new("TextLabel")
+AboutText.Size = UDim2.new(1,-20,1,-10)
+AboutText.Position = UDim2.fromOffset(10,5)
+AboutText.BackgroundTransparency = 1
+AboutText.Text =
+	"QUỐC ANH HUB\nMobile Edition • UI Preview"
+AboutText.TextSize = 9
+AboutText.Font = Enum.Font.GothamMedium
+AboutText.TextColor3 =
+	Color3.fromRGB(170,170,185)
+AboutText.TextXAlignment =
+	Enum.TextXAlignment.Center
+AboutText.TextYAlignment =
+	Enum.TextYAlignment.Center
+AboutText.Parent = About
+
+
+--================================================--
+-- RAINBOW EFFECT
+--================================================--
+
+RunService.RenderStepped:Connect(function()
+
+	local Rotation =
+		(tick()*42)%360
+
+	for _,Object in ipairs(Gui:GetDescendants()) do
+
+		if Object:IsA("UIGradient") then
+
+			Object.Rotation = Rotation
+
+		end
+	end
+end)
+--================================================--
+-- QUOC ANH HUB • PART 5 / 5
+-- FINAL MOBILE POLISH
+--================================================--
+
+--================================================--
+-- MOBILE SAFE SIZE
+--================================================--
+
+local Camera = workspace.CurrentCamera
+
+local function ResizeMobile()
+
+	local View = Camera.ViewportSize
+
+	local Width = math.clamp(
+		View.X * 0.90,
+		285,
+		420
+	)
+
+	local Height = math.clamp(
+		View.Y * 0.76,
+		390,
+		620
+	)
+
+	Main.Size = UDim2.fromOffset(
+		Width,
+		Height
+	)
+
+	Body.Size = UDim2.new(
+		1,
+		-30,
+		1,
+		-86
+	)
+
+	Content.Size = UDim2.new(
+		1,
+		-220,
+		1,
+		0
+	)
+
+end
+
+ResizeMobile()
+
+Camera:GetPropertyChangedSignal(
+	"ViewportSize"
+):Connect(ResizeMobile)
+
+
+--================================================--
+-- MINIMIZE BUTTON
+--================================================--
+
+local Mini = Instance.new("TextButton")
+
+Mini.Size = UDim2.fromOffset(34,34)
+Mini.Position = UDim2.new(
+	1,
+	-103,
+	0,
+	14
+)
+
+Mini.BackgroundTransparency = 1
+Mini.Text = "−"
+Mini.TextSize = 25
+Mini.Font = Enum.Font.GothamBold
+Mini.TextColor3 =
+	Color3.fromRGB(255,70,210)
+
+Mini.Parent = Main
+
+local Minimized = false
+
+local NormalSize = Main.Size
+
+Mini.MouseButton1Click:Connect(function()
+
+	Minimized = not Minimized
+
+	if Minimized then
+
+		Body.Visible = false
+		Footer.Visible = false
+
+		Main:TweenSize(
+			UDim2.fromOffset(
+				math.min(
+					Camera.ViewportSize.X * .72,
+					330
+				),
+				70
+			),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quart,
+			.25,
+			true
+		)
+
+		Mini.Text = "+"
+
+	else
+
+		Body.Visible = true
+		Footer.Visible = true
+
+		ResizeMobile()
+
+		Mini.Text = "−"
+	end
+end)
+
+
+--================================================--
+-- TOUCH BUTTON EFFECT
+--================================================--
+
+local function TouchEffect(Button)
+
+	if not Button:IsA("GuiButton") then
+		return
+	end
+
+	Button.Activated:Connect(function()
+
+		local Original =
+			Button.Size
+
+		Button:TweenSize(
+			Original - UDim2.fromOffset(4,2),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quad,
+			.06,
+			true
+		)
+
+		task.delay(.06,function()
+
+			if Button.Parent then
+
+				Button:TweenSize(
+					Original,
+					Enum.EasingDirection.Out,
+					Enum.EasingStyle.Quad,
+					.08,
+					true
+				)
+			end
+		end)
+	end)
+end
+
+
+for _,Object in ipairs(Gui:GetDescendants()) do
+
+	if Object:IsA("TextButton") then
+		TouchEffect(Object)
+	end
+end
+
+
+--================================================--
+-- RAINBOW GLOW
+--================================================--
+
+local Glow = Instance.new("ImageLabel")
+
+Glow.Name = "RainbowGlow"
+Glow.Size = UDim2.new(
+	1,
+	16,
+	1,
+	16
+)
+
+Glow.Position = UDim2.fromOffset(
+	-8,
+	-8
+)
+
+Glow.BackgroundTransparency = 1
+Glow.Image =
+	"rbxassetid://5028857084"
+
+Glow.ImageTransparency = .72
+Glow.ScaleType = Enum.ScaleType.Slice
+Glow.SliceCenter = Rect.new(
+	24,
+	24,
+	276,
+	276
+)
+
+Glow.ZIndex = 0
+Glow.Parent = Main
+
+
+--================================================--
+-- KEEP MAIN ABOVE GLOW
+--================================================--
+
+Main.ZIndex = 5
+
+for _,Object in ipairs(Main:GetDescendants()) do
+
+	if Object:IsA("GuiObject") then
+
+		Object.ZIndex =
+			math.max(
+				Object.ZIndex,
+				6
+			)
+	end
+end
+
+
+--================================================--
+-- DRAG BY TOUCH
+--================================================--
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+local function BeginDrag(Input)
+
+	Dragging = true
+
+	DragStart =
+		Input.Position
+
+	StartPosition =
+		Main.Position
+end
+
+Title.InputBegan:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		BeginDrag(Input)
+	end
+end)
+
+UIS.InputChanged:Connect(function(Input)
+
+	if not Dragging then
+		return
+	end
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		local Delta =
+			Input.Position -
+			DragStart
+
+		Main.Position =
+			UDim2.new(
+				StartPosition.X.Scale,
+				StartPosition.X.Offset +
+					Delta.X,
+
+				StartPosition.Y.Scale,
+				StartPosition.Y.Offset +
+					Delta.Y
+			)
+	end
+end)
+
+UIS.InputEnded:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		Dragging = false
+	end
+end)
+
+
+--================================================--
+-- RAINBOW LOOP
+--================================================--
+
+local RainbowSpeed = 48
+
+RunService.RenderStepped:Connect(function()
+
+	local Rotation =
+		(tick() * RainbowSpeed) % 360
+
+	for _,Object in ipairs(
+		Gui:GetDescendants()
+	) do
+
+		if Object:IsA("UIGradient") then
+
+			Object.Rotation =
+				Rotation
+		end
+	end
+
+	-- Strong rainbow colors
+	-- without making the whole UI glow
+
+	MainStroke.Thickness = 2.2
+	SideStroke.Thickness = 1.8
+	ProfileStroke.Thickness = 1.6
+	AvatarStroke.Thickness = 1.6
+
+end)
+
+
+--================================================--
+-- START ANIMATION
+--================================================--
+
+Main.Visible = false
+
+Main.Size =
+	UDim2.fromOffset(
+		Camera.ViewportSize.X * .55,
+		Camera.ViewportSize.Y * .45
+	)
+
+Main.Position =
+	UDim2.fromScale(.5,.5)
+
+Main.Visible = true
+
+task.wait()
+
+ResizeMobile()
+
+Main:TweenSize(
+	Main.Size,
+	Enum.EasingDirection.Out,
+	Enum.EasingStyle.Back,
+	.35,
+	true
+)
+
+
+--================================================--
+-- HOME ACTIVE
+--================================================--
+
+for PageName,Page in pairs(Pages) do
+
+	Page.Visible =
+		PageName == "HOME"
+end
+
+for TabName,Button in pairs(TabButtons) do
+
+	if TabName == "HOME" then
+
+		Button.BackgroundColor3 =
+			Color3.fromRGB(40,15,50)
+
+		Button.TextColor3 =
+			Color3.fromRGB(255,70,220)
+	end
+end
+
+
+--================================================--
+-- FINAL STATUS
+--================================================--
+
+print(
+	"🌈 QUỐC ANH HUB MOBILE EDITION LOADED"
+)
+
+print(
+	"📱 Mobile UI: READY"
+)
+
+print(
+	"🌈 Rainbow UI: READY"
+)
+
+print(
+	"🐱 Cat Profile: READY"
+)
