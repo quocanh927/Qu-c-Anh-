@@ -1,0 +1,1140 @@
+--================================================--
+-- QUOC ANH HUB - RAINBOW UI
+-- PART 1 / 2
+--================================================--
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "QuocAnhHub"
+Gui.ResetOnSpawn = false
+Gui.IgnoreGuiInset = true
+Gui.Parent = Player:WaitForChild("PlayerGui")
+
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromOffset(900,560)
+Main.Position = UDim2.fromScale(.5,.5)
+Main.AnchorPoint = Vector2.new(.5,.5)
+Main.BackgroundColor3 = Color3.fromRGB(7,8,13)
+Main.BorderSizePixel = 0
+Main.Parent = Gui
+
+Instance.new("UICorner",Main).CornerRadius = UDim.new(0,18)
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = 2
+Stroke.Parent = Main
+
+local Rainbow = Instance.new("UIGradient")
+Rainbow.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,30,100)),
+	ColorSequenceKeypoint.new(.16,Color3.fromRGB(255,170,20)),
+	ColorSequenceKeypoint.new(.33,Color3.fromRGB(255,255,30)),
+	ColorSequenceKeypoint.new(.5,Color3.fromRGB(0,255,120)),
+	ColorSequenceKeypoint.new(.66,Color3.fromRGB(0,210,255)),
+	ColorSequenceKeypoint.new(.83,Color3.fromRGB(100,50,255)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(255,30,200))
+})
+Rainbow.Parent = Stroke
+
+-- HEADER
+
+local Logo = Instance.new("TextLabel")
+Logo.Size = UDim2.fromOffset(50,50)
+Logo.Position = UDim2.fromOffset(22,15)
+Logo.BackgroundTransparency = 1
+Logo.Text = "♛"
+Logo.TextSize = 36
+Logo.Font = Enum.Font.GothamBold
+Logo.Parent = Main
+
+local LG = Rainbow:Clone()
+LG.Parent = Logo
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.fromOffset(400,35)
+Title.Position = UDim2.fromOffset(75,18)
+Title.BackgroundTransparency = 1
+Title.Text = "QUỐC ANH HUB"
+Title.TextSize = 25
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Main
+
+local TG = Rainbow:Clone()
+TG.Parent = Title
+
+local Sub = Instance.new("TextLabel")
+Sub.Size = UDim2.fromOffset(400,20)
+Sub.Position = UDim2.fromOffset(77,48)
+Sub.BackgroundTransparency = 1
+Sub.Text = "THE BEST SCRIPT • ALWAYS UPDATED"
+Sub.TextSize = 10
+Sub.Font = Enum.Font.GothamMedium
+Sub.TextColor3 = Color3.fromRGB(150,150,165)
+Sub.TextXAlignment = Enum.TextXAlignment.Left
+Sub.Parent = Main
+
+local Close = Instance.new("TextButton")
+Close.Size = UDim2.fromOffset(35,35)
+Close.Position = UDim2.new(1,-15,0,15)
+Close.AnchorPoint = Vector2.new(1,0)
+Close.BackgroundTransparency = 1
+Close.Text = "×"
+Close.TextSize = 30
+Close.Font = Enum.Font.GothamBold
+Close.TextColor3 = Color3.fromRGB(255,50,170)
+Close.Parent = Main
+
+Close.MouseButton1Click:Connect(function()
+	Gui:Destroy()
+end)
+
+local Min = Instance.new("TextButton")
+Min.Size = UDim2.fromOffset(35,35)
+Min.Position = UDim2.new(1,-55,0,15)
+Min.AnchorPoint = Vector2.new(1,0)
+Min.BackgroundTransparency = 1
+Min.Text = "−"
+Min.TextSize = 27
+Min.Font = Enum.Font.GothamBold
+Min.TextColor3 = Color3.fromRGB(180,90,255)
+Min.Parent = Main
+
+-- BODY
+
+local Body = Instance.new("Frame")
+Body.Size = UDim2.new(1,-30,1,-90)
+Body.Position = UDim2.fromOffset(15,80)
+Body.BackgroundTransparency = 1
+Body.Parent = Main
+
+-- SIDEBAR
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.fromOffset(205,465)
+Sidebar.BackgroundColor3 = Color3.fromRGB(10,11,18)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = Body
+
+Instance.new("UICorner",Sidebar).CornerRadius = UDim.new(0,14)
+
+local SideStroke = Instance.new("UIStroke")
+SideStroke.Thickness = 1.2
+SideStroke.Parent = Sidebar
+
+local SideRainbow = Rainbow:Clone()
+SideRainbow.Parent = SideStroke
+
+-- CONTENT
+
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1,-220,1,0)
+Content.Position = UDim2.fromOffset(220,0)
+Content.BackgroundTransparency = 1
+Content.Parent = Body
+
+-- PAGES
+
+local Pages = {}
+
+local function Page(Name)
+	local P = Instance.new("Frame")
+	P.Name = Name
+	P.Size = UDim2.fromScale(1,1)
+	P.BackgroundTransparency = 1
+	P.Visible = false
+	P.Parent = Content
+	Pages[Name] = P
+	return P
+end
+
+Page("HOME")
+Page("AIMBOT")
+Page("VISUALS")
+Page("PLAYER")
+Page("MOVEMENT")
+Page("MISC")
+Page("VIP")
+Page("SETTINGS")
+
+-- TABS
+
+local Tabs = {
+	{"⌂","HOME"},
+	{"◎","AIMBOT"},
+	{"◉","VISUALS"},
+	{"♟","PLAYER"},
+	{"↗","MOVEMENT"},
+	{"⚙","MISC"},
+	{"◆","VIP"},
+	{"⚙","SETTINGS"}
+}
+
+local Buttons = {}
+
+for i,v in ipairs(Tabs) do
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.new(1,-18,0,42)
+	Button.Position = UDim2.fromOffset(9,8+(i-1)*46)
+	Button.BackgroundColor3 = Color3.fromRGB(11,12,19)
+	Button.BorderSizePixel = 0
+	Button.Text = v[1].."    "..v[2]
+	Button.TextSize = 13
+	Button.Font = Enum.Font.GothamBold
+	Button.TextColor3 = Color3.fromRGB(210,210,220)
+	Button.TextXAlignment = Enum.TextXAlignment.Left
+	Button.AutoButtonColor = false
+	Button.Parent = Sidebar
+
+	Instance.new("UICorner",Button).CornerRadius = UDim.new(0,9)
+
+	Buttons[v[2]] = Button
+
+	Button.MouseButton1Click:Connect(function()
+
+		for _,p in pairs(Pages) do
+			p.Visible = false
+		end
+
+		for _,b in pairs(Buttons) do
+			b.BackgroundColor3 = Color3.fromRGB(11,12,19)
+		end
+
+		Pages[v[2]].Visible = true
+		Button.BackgroundColor3 = Color3.fromRGB(34,23,48)
+	end)
+end
+
+Pages.HOME.Visible = true
+Buttons.HOME.BackgroundColor3 = Color3.fromRGB(34,23,48)
+
+-- PROFILE
+
+local Profile = Instance.new("Frame")
+Profile.Size = UDim2.new(1,-18,0,65)
+Profile.Position = UDim2.new(0,9,1,-73)
+Profile.BackgroundColor3 = Color3.fromRGB(13,14,22)
+Profile.BorderSizePixel = 0
+Profile.Parent = Sidebar
+
+Instance.new("UICorner",Profile).CornerRadius = UDim.new(0,11)
+
+local Avatar = Instance.new("ImageLabel")
+Avatar.Size = UDim2.fromOffset(42,42)
+Avatar.Position = UDim2.fromOffset(10,11)
+Avatar.BackgroundColor3 = Color3.fromRGB(30,30,40)
+Avatar.BorderSizePixel = 0
+Avatar.Image = "rbxthumb://type=AvatarHeadShot&id="
+	..Player.UserId.."&w=150&h=150"
+Avatar.Parent = Profile
+
+Instance.new("UICorner",Avatar).CornerRadius = UDim.new(1,0)
+
+local Name = Instance.new("TextLabel")
+Name.Size = UDim2.fromOffset(120,20)
+Name.Position = UDim2.fromOffset(61,8)
+Name.BackgroundTransparency = 1
+Name.Text = Player.Name
+Name.TextSize = 13
+Name.Font = Enum.Font.GothamBold
+Name.TextColor3 = Color3.fromRGB(235,235,240)
+Name.TextXAlignment = Enum.TextXAlignment.Left
+Name.Parent = Profile
+
+local VIP = Instance.new("TextLabel")
+VIP.Size = UDim2.fromOffset(120,18)
+VIP.Position = UDim2.fromOffset(61,31)
+VIP.BackgroundTransparency = 1
+VIP.Text = "VIP • LIFETIME"
+VIP.TextSize = 10
+VIP.Font = Enum.Font.GothamMedium
+VIP.TextColor3 = Color3.fromRGB(255,185,40)
+VIP.TextXAlignment = Enum.TextXAlignment.Left
+VIP.Parent = Profile
+
+--================================================--
+-- QUOC ANH HUB - PART 2 / 2
+--================================================--
+
+local function Card(P,X,Y,W,H,Icon,Title)
+
+	local C = Instance.new("Frame")
+	C.Size = UDim2.fromOffset(W,H)
+	C.Position = UDim2.fromOffset(X,Y)
+	C.BackgroundColor3 = Color3.fromRGB(9,10,16)
+	C.BorderSizePixel = 0
+	C.Parent = P
+
+	Instance.new("UICorner",C).CornerRadius = UDim.new(0,13)
+
+	local S = Instance.new("UIStroke")
+	S.Thickness = 1.2
+	S.Parent = C
+
+	local G = Rainbow:Clone()
+	G.Parent = S
+
+	local H = Instance.new("TextLabel")
+	H.Size = UDim2.new(1,-20,0,30)
+	H.Position = UDim2.fromOffset(12,8)
+	H.BackgroundTransparency = 1
+	H.Text = Icon.."  "..Title
+	H.TextSize = 15
+	H.Font = Enum.Font.GothamBold
+	H.TextXAlignment = Enum.TextXAlignment.Left
+	H.Parent = C
+
+	local HG = Rainbow:Clone()
+	HG.Parent = H
+
+	return C
+end
+
+local function Toggle(P,Text,Y)
+
+	local L = Instance.new("TextLabel")
+	L.Size = UDim2.new(1,-70,0,25)
+	L.Position = UDim2.fromOffset(14,Y)
+	L.BackgroundTransparency = 1
+	L.Text = Text
+	L.TextSize = 12
+	L.Font = Enum.Font.GothamMedium
+	L.TextColor3 = Color3.fromRGB(215,215,225)
+	L.TextXAlignment = Enum.TextXAlignment.Left
+	L.Parent = P
+
+	local B = Instance.new("TextButton")
+	B.Size = UDim2.fromOffset(40,21)
+	B.Position = UDim2.new(1,-53,0,Y+2)
+	B.BackgroundColor3 = Color3.fromRGB(50,51,61)
+	B.BorderSizePixel = 0
+	B.Text = ""
+	B.AutoButtonColor = false
+	B.Parent = P
+
+	Instance.new("UICorner",B).CornerRadius = UDim.new(1,0)
+
+	local D = Instance.new("Frame")
+	D.Size = UDim2.fromOffset(15,15)
+	D.Position = UDim2.fromOffset(3,3)
+	D.BackgroundColor3 = Color3.fromRGB(230,230,235)
+	D.BorderSizePixel = 0
+	D.Parent = B
+
+	Instance.new("UICorner",D).CornerRadius = UDim.new(1,0)
+
+	local On = false
+
+	B.MouseButton1Click:Connect(function()
+
+		On = not On
+
+		if On then
+			B.BackgroundColor3 = Color3.fromRGB(20,205,130)
+
+			D:TweenPosition(
+				UDim2.new(1,-18,0,3),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+		else
+			B.BackgroundColor3 = Color3.fromRGB(50,51,61)
+
+			D:TweenPosition(
+				UDim2.fromOffset(3,3),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+		end
+	end)
+
+	return B
+end
+
+local function Slider(P,Text,Y,Value)
+
+	local L = Instance.new("TextLabel")
+	L.Size = UDim2.new(1,-25,0,22)
+	L.Position = UDim2.fromOffset(14,Y)
+	L.BackgroundTransparency = 1
+	L.Text = Text.."    "..Value
+	L.TextSize = 12
+	L.Font = Enum.Font.GothamMedium
+	L.TextColor3 = Color3.fromRGB(215,215,225)
+	L.TextXAlignment = Enum.TextXAlignment.Left
+	L.Parent = P
+
+	local Bar = Instance.new("Frame")
+	Bar.Size = UDim2.new(1,-28,0,5)
+	Bar.Position = UDim2.fromOffset(14,Y+26)
+	Bar.BackgroundColor3 = Color3.fromRGB(45,46,56)
+	Bar.BorderSizePixel = 0
+	Bar.Parent = P
+
+	Instance.new("UICorner",Bar).CornerRadius = UDim.new(1,0)
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.fromScale(.65,1)
+	Fill.BackgroundColor3 = Color3.fromRGB(255,45,175)
+	Fill.BorderSizePixel = 0
+	Fill.Parent = Bar
+
+	Instance.new("UICorner",Fill).CornerRadius = UDim.new(1,0)
+end
+
+--================================================--
+-- HOME
+--================================================--
+
+local Home = Pages.HOME
+
+local Welcome = Instance.new("Frame")
+Welcome.Size = UDim2.new(1,0,0,82)
+Welcome.BackgroundColor3 = Color3.fromRGB(9,10,16)
+Welcome.BorderSizePixel = 0
+Welcome.Parent = Home
+
+Instance.new("UICorner",Welcome).CornerRadius = UDim.new(0,14)
+
+local WS = Instance.new("UIStroke")
+WS.Thickness = 1.2
+WS.Parent = Welcome
+
+local WG = Rainbow:Clone()
+WG.Parent = WS
+
+local Star = Instance.new("TextLabel")
+Star.Size = UDim2.fromOffset(60,60)
+Star.Position = UDim2.fromOffset(15,10)
+Star.BackgroundTransparency = 1
+Star.Text = "☆"
+Star.TextSize = 48
+Star.Font = Enum.Font.GothamBold
+Star.Parent = Welcome
+
+local SG = Rainbow:Clone()
+SG.Parent = Star
+
+local WT = Instance.new("TextLabel")
+WT.Size = UDim2.fromOffset(350,28)
+WT.Position = UDim2.fromOffset(75,15)
+WT.BackgroundTransparency = 1
+WT.Text = "WELCOME, QUOCANH!"
+WT.TextSize = 19
+WT.Font = Enum.Font.GothamBold
+WT.TextXAlignment = Enum.TextXAlignment.Left
+WT.Parent = Welcome
+
+local WTG = Rainbow:Clone()
+WTG.Parent = WT
+
+local WS2 = Instance.new("TextLabel")
+WS2.Size = UDim2.fromOffset(400,20)
+WS2.Position = UDim2.fromOffset(77,43)
+WS2.BackgroundTransparency = 1
+WS2.Text = "Enjoy the game and have fun!"
+WS2.TextSize = 11
+WS2.Font = Enum.Font.Gotham
+WS2.TextColor3 = Color3.fromRGB(160,160,175)
+WS2.TextXAlignment = Enum.TextXAlignment.Left
+WS2.Parent = Welcome
+
+--================================================--
+-- HOME CARDS
+--================================================--
+
+local A = Card(Home,0,95,325,165,"◎","AIMBOT")
+Toggle(A,"Enable Aimbot",48)
+Toggle(A,"Aim Lock",80)
+Toggle(A,"FOV Circle",112)
+Slider(A,"FOV Size",133,150)
+
+local V = Card(Home,340,95,325,165,"◉","VISUALS")
+Toggle(V,"Player ESP",48)
+Toggle(V,"Name ESP",80)
+Toggle(V,"Box ESP",112)
+Toggle(V,"Health Bar",144)
+
+local P = Card(Home,0,275,325,165,"♟","PLAYER")
+Slider(P,"WalkSpeed",48,100)
+Slider(P,"JumpPower",95,100)
+Toggle(P,"Custom Movement",130)
+
+local M = Card(Home,340,275,325,165,"⚙","MISC")
+Toggle(M,"Infinity Jump",48)
+Toggle(M,"Auto Respawn",80)
+Toggle(M,"Anti AFK",112)
+Toggle(M,"Rainbow UI",144)
+
+--================================================--
+-- OTHER PAGES
+--================================================--
+
+local function BuildPage(Page,Title,Icon)
+
+	local Header = Instance.new("TextLabel")
+	Header.Size = UDim2.new(1,0,0,40)
+	Header.BackgroundTransparency = 1
+	Header.Text = Icon.."  "..Title
+	Header.TextSize = 21
+	Header.Font = Enum.Font.GothamBold
+	Header.TextXAlignment = Enum.TextXAlignment.Left
+	Header.Parent = Page
+
+	local HG = Rainbow:Clone()
+	HG.Parent = Header
+
+	local C = Card(Page,0,48,665,365,Icon,Title)
+
+	Toggle(C,"Enable "..Title,48)
+	Toggle(C,"Show Names",82)
+	Toggle(C,"Highlight",116)
+	Toggle(C,"Notifications",150)
+	Toggle(C,"Smooth Animation",184)
+
+	Slider(C,"Strength",220,75)
+	Slider(C,"Size",270,100)
+end
+
+BuildPage(Pages.AIMBOT,"AIMBOT","◎")
+BuildPage(Pages.VISUALS,"VISUALS","◉")
+BuildPage(Pages.PLAYER,"PLAYER","♟")
+BuildPage(Pages.MOVEMENT,"MOVEMENT","↗")
+BuildPage(Pages.MISC,"MISC","⚙")
+BuildPage(Pages.VIP,"VIP","◆")
+BuildPage(Pages.SETTINGS,"SETTINGS","⚙")
+
+--================================================--
+-- DRAG
+--================================================--
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+Title.InputBegan:Connect(function(Input)
+
+	if Input.UserInputType == Enum.UserInputType.MouseButton1
+	or Input.UserInputType == Enum.UserInputType.Touch then
+
+		Dragging = true
+		DragStart = Input.Position
+		StartPosition = Main.Position
+	end
+end)
+
+UIS.InputChanged:Connect(function(Input)
+
+	if not Dragging then return end
+
+	if Input.UserInputType == Enum.UserInputType.MouseMovement
+	or Input.UserInputType == Enum.UserInputType.Touch then
+
+		local Delta = Input.Position - DragStart
+
+		Main.Position = UDim2.new(
+			StartPosition.X.Scale,
+			StartPosition.X.Offset + Delta.X,
+			StartPosition.Y.Scale,
+			StartPosition.Y.Offset + Delta.Y
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function(Input)
+
+	if Input.UserInputType == Enum.UserInputType.MouseButton1
+	or Input.UserInputType == Enum.UserInputType.Touch then
+
+		Dragging = false
+	end
+end)
+
+--================================================--
+-- MINIMIZE
+--================================================--
+
+local Small = false
+
+Min.MouseButton1Click:Connect(function()
+
+	Small = not Small
+
+	if Small then
+
+		Main:TweenSize(
+			UDim2.fromOffset(330,70),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quad,
+			.25,
+			true
+		)
+
+		Body.Visible = false
+		Sub.Visible = false
+		Logo.Visible = false
+
+	else
+
+		Main:TweenSize(
+			UDim2.fromOffset(900,560),
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quad,
+			.25,
+			true
+		)
+
+		Body.Visible = true
+		Sub.Visible = true
+		Logo.Visible = true
+	end
+end)
+
+--================================================--
+-- RAINBOW ANIMATION
+--================================================--
+
+local Rotation = 0
+
+RunService.RenderStepped:Connect(function(dt)
+
+	Rotation = (Rotation + dt * 35) % 360
+
+	Rainbow.Rotation = Rotation
+	LG.Rotation = Rotation
+	TG.Rotation = Rotation
+	SideRainbow.Rotation = Rotation
+	WG.Rotation = Rotation
+	SG.Rotation = Rotation
+	WTG.Rotation = Rotation
+
+end)
+
+--================================================--
+-- QUOC ANH HUB • PART 2
+-- UI POLISH / ANIMATION / SLIDER / TOUCH
+--================================================--
+
+--// TOGGLE EFFECT
+local function AddToggleEffect(Button)
+	local Normal = Button.BackgroundColor3
+
+	Button.MouseEnter:Connect(function()
+		Button.BackgroundColor3 = Color3.fromRGB(65,66,78)
+	end)
+
+	Button.MouseLeave:Connect(function()
+		Button.BackgroundColor3 = Normal
+	end)
+end
+
+--// APPLY HOVER TO SIDEBAR
+for _,Button in pairs(Buttons) do
+	AddToggleEffect(Button)
+end
+
+
+--================================================--
+-- REAL SLIDER
+--================================================--
+
+local function MakeSlider(Parent,Text,Y,Min,Max,Default)
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1,-30,0,22)
+	Label.Position = UDim2.fromOffset(14,Y)
+	Label.BackgroundTransparency = 1
+	Label.Text = Text.." : "..Default
+	Label.TextSize = 12
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextColor3 = Color3.fromRGB(220,220,230)
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Parent
+
+	local Bar = Instance.new("Frame")
+	Bar.Size = UDim2.new(1,-28,0,6)
+	Bar.Position = UDim2.fromOffset(14,Y+28)
+	Bar.BackgroundColor3 = Color3.fromRGB(43,44,53)
+	Bar.BorderSizePixel = 0
+	Bar.Parent = Parent
+
+	Instance.new("UICorner",Bar).CornerRadius = UDim.new(1,0)
+
+	local Fill = Instance.new("Frame")
+	Fill.Size = UDim2.fromScale(
+		(Default-Min)/(Max-Min),
+		1
+	)
+	Fill.BackgroundColor3 = Color3.fromRGB(255,45,175)
+	Fill.BorderSizePixel = 0
+	Fill.Parent = Bar
+
+	Instance.new("UICorner",Fill).CornerRadius = UDim.new(1,0)
+
+	local Knob = Instance.new("Frame")
+	Knob.Size = UDim2.fromOffset(13,13)
+	Knob.AnchorPoint = Vector2.new(.5,.5)
+	Knob.Position = UDim2.fromScale(
+		(Default-Min)/(Max-Min),
+		.5
+	)
+	Knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	Knob.BorderSizePixel = 0
+	Knob.Parent = Bar
+
+	Instance.new("UICorner",Knob).CornerRadius = UDim.new(1,0)
+
+	local Dragging = false
+
+	local function Update(X)
+
+		local Percent = math.clamp(
+			(X-Bar.AbsolutePosition.X) /
+			Bar.AbsoluteSize.X,
+			0,
+			1
+		)
+
+		local Value = math.floor(
+			Min + ((Max-Min)*Percent)
+		)
+
+		Fill.Size = UDim2.fromScale(Percent,1)
+		Knob.Position = UDim2.fromScale(Percent,.5)
+		Label.Text = Text.." : "..Value
+	end
+
+	Bar.InputBegan:Connect(function(Input)
+
+		if Input.UserInputType == Enum.UserInputType.MouseButton1
+		or Input.UserInputType == Enum.UserInputType.Touch then
+
+			Dragging = true
+			Update(Input.Position.X)
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(Input)
+
+		if not Dragging then return end
+
+		if Input.UserInputType == Enum.UserInputType.MouseMovement
+		or Input.UserInputType == Enum.UserInputType.Touch then
+
+			Update(Input.Position.X)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(Input)
+
+		if Input.UserInputType == Enum.UserInputType.MouseButton1
+		or Input.UserInputType == Enum.UserInputType.Touch then
+
+			Dragging = false
+		end
+	end)
+
+	return Label
+end
+
+
+--================================================--
+-- PAGE TRANSITION
+--================================================--
+
+for Name,Page in pairs(Pages) do
+
+	Page:GetPropertyChangedSignal("Visible"):Connect(function()
+
+		if Page.Visible then
+
+			Page.Position = UDim2.fromOffset(12,0)
+
+			Page:TweenPosition(
+				UDim2.fromOffset(0,0),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quart,
+				.18,
+				true
+			)
+		end
+	end)
+end
+
+
+--================================================--
+-- BETTER TOGGLE ANIMATION
+--================================================--
+
+local function AnimatedToggle(Parent,Text,Y)
+
+	local Label = Instance.new("TextLabel")
+	Label.Size = UDim2.new(1,-80,0,25)
+	Label.Position = UDim2.fromOffset(14,Y)
+	Label.BackgroundTransparency = 1
+	Label.Text = Text
+	Label.TextSize = 12
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextColor3 = Color3.fromRGB(215,215,225)
+	Label.TextXAlignment = Enum.TextXAlignment.Left
+	Label.Parent = Parent
+
+	local Button = Instance.new("TextButton")
+	Button.Size = UDim2.fromOffset(42,22)
+	Button.Position = UDim2.new(1,-55,0,Y+1)
+	Button.BackgroundColor3 = Color3.fromRGB(48,49,59)
+	Button.BorderSizePixel = 0
+	Button.Text = ""
+	Button.Parent = Parent
+
+	Instance.new("UICorner",Button).CornerRadius = UDim.new(1,0)
+
+	local Dot = Instance.new("Frame")
+	Dot.Size = UDim2.fromOffset(16,16)
+	Dot.Position = UDim2.fromOffset(3,3)
+	Dot.BackgroundColor3 = Color3.fromRGB(230,230,235)
+	Dot.BorderSizePixel = 0
+	Dot.Parent = Button
+
+	Instance.new("UICorner",Dot).CornerRadius = UDim.new(1,0)
+
+	local Enabled = false
+
+	Button.MouseButton1Click:Connect(function()
+
+		Enabled = not Enabled
+
+		if Enabled then
+
+			Button:TweenSize(
+				UDim2.fromOffset(45,24),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.1,
+				true
+			)
+
+			task.wait(.08)
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(20,210,135)
+
+			Dot:TweenPosition(
+				UDim2.new(1,-19,0,4),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+
+		else
+
+			Button.BackgroundColor3 =
+				Color3.fromRGB(48,49,59)
+
+			Dot:TweenPosition(
+				UDim2.fromOffset(3,3),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.15,
+				true
+			)
+
+			Button:TweenSize(
+				UDim2.fromOffset(42,22),
+				Enum.EasingDirection.Out,
+				Enum.EasingStyle.Quad,
+				.1,
+				true
+			)
+		end
+	end)
+end
+
+
+--================================================--
+-- VIP PANEL
+--================================================--
+
+local VIPPage = Pages.VIP
+
+local VIPBanner = Instance.new("Frame")
+VIPBanner.Size = UDim2.new(1,0,0,95)
+VIPBanner.BackgroundColor3 = Color3.fromRGB(12,10,20)
+VIPBanner.BorderSizePixel = 0
+VIPBanner.Parent = VIPPage
+
+Instance.new("UICorner",VIPBanner).CornerRadius = UDim.new(0,15)
+
+local VStroke = Instance.new("UIStroke")
+VStroke.Thickness = 1.5
+VStroke.Parent = VIPBanner
+
+local VG = Rainbow:Clone()
+VG.Parent = VStroke
+
+local Crown = Instance.new("TextLabel")
+Crown.Size = UDim2.fromOffset(75,75)
+Crown.Position = UDim2.fromOffset(15,10)
+Crown.BackgroundTransparency = 1
+Crown.Text = "♛"
+Crown.TextSize = 55
+Crown.Font = Enum.Font.GothamBold
+Crown.Parent = VIPBanner
+
+local CG = Rainbow:Clone()
+CG.Parent = Crown
+
+local VIPTitle = Instance.new("TextLabel")
+VIPTitle.Size = UDim2.fromOffset(400,30)
+VIPTitle.Position = UDim2.fromOffset(95,16)
+VIPTitle.BackgroundTransparency = 1
+VIPTitle.Text = "VIP MEMBER"
+VIPTitle.TextSize = 20
+VIPTitle.Font = Enum.Font.GothamBold
+VIPTitle.TextXAlignment = Enum.TextXAlignment.Left
+VIPTitle.Parent = VIPBanner
+
+local VTG = Rainbow:Clone()
+VTG.Parent = VIPTitle
+
+local VIPDesc = Instance.new("TextLabel")
+VIPDesc.Size = UDim2.fromOffset(400,25)
+VIPDesc.Position = UDim2.fromOffset(97,48)
+VIPDesc.BackgroundTransparency = 1
+VIPDesc.Text = "Lifetime access • Premium interface"
+VIPDesc.TextSize = 11
+VIPDesc.Font = Enum.Font.GothamMedium
+VIPDesc.TextColor3 = Color3.fromRGB(170,170,185)
+VIPDesc.TextXAlignment = Enum.TextXAlignment.Left
+VIPDesc.Parent = VIPBanner
+
+
+--================================================--
+-- SETTINGS PANEL
+--================================================--
+
+local SettingsPage = Pages.SETTINGS
+
+local SettingsCard = Card(
+	SettingsPage,
+	0,
+	55,
+	665,
+	330,
+	"⚙",
+	"INTERFACE SETTINGS"
+)
+
+AnimatedToggle(SettingsCard,"Rainbow Border",48)
+AnimatedToggle(SettingsCard,"Smooth Animation",82)
+AnimatedToggle(SettingsCard,"Notifications",116)
+AnimatedToggle(SettingsCard,"Compact Mode",150)
+
+MakeSlider(
+	SettingsCard,
+	"UI Scale",
+	195,
+	80,
+	120,
+	100
+)
+
+
+--================================================--
+-- MOBILE SCALE
+--================================================--
+
+local Camera = workspace.CurrentCamera
+
+local function ResizeForScreen()
+
+	local View = Camera.ViewportSize
+
+	if View.X < 700 then
+
+		Main.Size = UDim2.fromOffset(700,440)
+
+	elseif View.X < 1000 then
+
+		Main.Size = UDim2.fromOffset(820,510)
+
+	else
+
+		Main.Size = UDim2.fromOffset(900,560)
+	end
+end
+
+ResizeForScreen()
+
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(
+	ResizeForScreen
+)
+
+
+--================================================--
+-- RAINBOW ANIMATION
+--================================================--
+
+local Hue = 0
+
+RunService.RenderStepped:Connect(function(dt)
+
+	Hue = (Hue + dt * .18) % 1
+
+	local Rotation =
+		(tick() * 30) % 360
+
+	Rainbow.Rotation = Rotation
+
+	LG.Rotation = Rotation
+	TG.Rotation = Rotation
+	SideRainbow.Rotation = Rotation
+
+	if WG then
+		WG.Rotation = Rotation
+	end
+
+	if SG then
+		SG.Rotation = Rotation
+	end
+
+	if WTG then
+		WTG.Rotation = Rotation
+	end
+
+	if CG then
+		CG.Rotation = Rotation
+	end
+
+	if VG then
+		VG.Rotation = Rotation
+	end
+
+	if VTG then
+		VTG.Rotation = Rotation
+	end
+end)
+
+
+--================================================--
+-- MINIMIZE
+--================================================--
+
+local OriginalSize = UDim2.fromOffset(900,560)
+local SmallSize = UDim2.fromOffset(330,70)
+local IsSmall = false
+
+Min.MouseButton1Click:Connect(function()
+
+	IsSmall = not IsSmall
+
+	if IsSmall then
+
+		Main:TweenSize(
+			SmallSize,
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quart,
+			.25,
+			true
+		)
+
+		Body.Visible = false
+		Sub.Visible = false
+		Logo.Visible = false
+
+	else
+
+		Main:TweenSize(
+			OriginalSize,
+			Enum.EasingDirection.Out,
+			Enum.EasingStyle.Quart,
+			.25,
+			true
+		)
+
+		task.wait(.1)
+
+		Body.Visible = true
+		Sub.Visible = true
+		Logo.Visible = true
+	end
+end)
+
+
+--================================================--
+-- DRAGGING • PC + MOBILE
+--================================================--
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+local function BeginDrag(Input)
+
+	Dragging = true
+	DragStart = Input.Position
+	StartPosition = Main.Position
+end
+
+Title.InputBegan:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+	or Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		BeginDrag(Input)
+	end
+end)
+
+UIS.InputChanged:Connect(function(Input)
+
+	if not Dragging then
+		return
+	end
+
+	if Input.UserInputType ==
+		Enum.UserInputType.MouseMovement
+	or Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		local Delta =
+			Input.Position - DragStart
+
+		Main.Position = UDim2.new(
+			StartPosition.X.Scale,
+			StartPosition.X.Offset + Delta.X,
+			StartPosition.Y.Scale,
+			StartPosition.Y.Offset + Delta.Y
+		)
+	end
+end)
+
+UIS.InputEnded:Connect(function(Input)
+
+	if Input.UserInputType ==
+		Enum.UserInputType.MouseButton1
+	or Input.UserInputType ==
+		Enum.UserInputType.Touch then
+
+		Dragging = false
+	end
+end)
+
+
+--================================================--
+-- FINISH
+--================================================--
+
+print("🌈 QUOC ANH HUB UI READY")
