@@ -1,7 +1,3 @@
--- 👑 QUỐC ANH HUB - PHẦN 1/7
--- LocalScript -> StarterPlayerScripts
--- FULL SCRIPT - COPY TỪNG PHẦN
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,40 +5,44 @@ local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local VirtualInput = game:GetService("VirtualInputManager")
 local TeleportService = game:GetService("TeleportService")
-local HttpService = game:GetService("HttpService")
 
 local LocalPlayer = Players.LocalPlayer
 local camera = workspace.CurrentCamera
 
 -- ===================== THEME =====================
 local THEME = {
-    Accent   = Color3.fromRGB(0, 219, 146),
-    Accent2  = Color3.fromRGB(0, 168, 232),
-    Bg       = Color3.fromRGB(17, 18, 24),
-    BgLight  = Color3.fromRGB(24, 26, 33),
-    Card     = Color3.fromRGB(28, 30, 39),
-    Card2    = Color3.fromRGB(33, 36, 47),
-    Stroke   = Color3.fromRGB(45, 49, 62),
-    Text     = Color3.fromRGB(238, 240, 246),
-    Dim      = Color3.fromRGB(133, 141, 158),
-    Off      = Color3.fromRGB(54, 58, 72),
-    Red      = Color3.fromRGB(230, 46, 46),
-    Warn     = Color3.fromRGB(255, 190, 80),
-    Gold     = Color3.fromRGB(255, 215, 0),
+    Bg      = Color3.fromRGB(17, 18, 24),
+    Card    = Color3.fromRGB(28, 30, 39),
+    Card2   = Color3.fromRGB(33, 36, 47),
+    Stroke  = Color3.fromRGB(45, 49, 62),
+    Text    = Color3.fromRGB(238, 240, 246),
+    Dim     = Color3.fromRGB(133, 141, 158),
+    Off     = Color3.fromRGB(54, 58, 72),
+    Red     = Color3.fromRGB(230, 46, 46),
+    Accent  = Color3.fromRGB(0, 219, 146),
+    Gold    = Color3.fromRGB(255, 215, 0),
 }
 
 -- ===================== STATE =====================
 local State = {
     MenuOpen = false,
-    CurrentTab = 1,
-
-    Aimbot = { Enabled = false, FOVCircle = false, FOVSize = 150, Smoothness = 0.96, Prediction = 0.035 },
-    Hitbox = { Enabled = false, Size = 5 },
-    Speed = { Enabled = false, Value = 45 },
-    JumpBoost = { Enabled = false, Value = 90 },
+    Aimbot = false,
+    FOVCircle = false,
+    FOVSize = 150,
+    Hitbox = false,
+    HitboxSize = 5,
+    Speed = false,
+    SpeedValue = 45,
+    JumpBoost = false,
+    JumpValue = 90,
     NoClip = false,
     InfinityJump = false,
-    ESP = { Enabled = false, Players = false, Names = false, Box = false, HealthBar = false, Tracers = false },
+    ESP = false,
+    ESP_Player = false,
+    ESP_Name = false,
+    ESP_Box = false,
+    ESP_Health = false,
+    ESP_Tracer = false,
     Fullbright = false,
     FixLag = false,
     GodMode = false,
@@ -53,51 +53,70 @@ local State = {
 -- ===================== VARIABLES =====================
 local aimbotTarget = nil
 local fovRainbowAngle = 0
-local rainbowGradients = {}
 local espObjects = {}
 local hitboxOriginalSizes = {}
+local rainbowGradients = {}
 
 -- ===================== HELPERS =====================
-local function new(class, props, children)
+local function new(class, props)
     local inst = Instance.new(class)
     for k, v in pairs(props or {}) do
-        if k ~= "Parent" then inst[k] = v end
+        if k ~= "Parent" then inst[k] = v
     end
-    for _, c in ipairs(children or {}) do c.Parent = inst end
-    if props and props.Parent then inst.Parent = props.Parent end
+    if props and props.Parent then inst.Parent = props.Parent
     return inst
 end
 
-local function corner(parent, r)
-    return new("UICorner", { CornerRadius = UDim.new(0, r), Parent = parent })
+local function corner(p, r)
+    return new("UICorner", { CornerRadius = UDim.new(0, r), Parent = p })
 end
 
-local function stroke(parent, color, thickness)
-    return new("UIStroke", {
-        Color = color or THEME.Stroke, Thickness = thickness or 1,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Parent = parent,
-    })
+local function stroke(p, c, t)
+    return new("UIStroke", { Color = c or THEME.Stroke, Thickness = t or 1, Parent = p })
 end
 
-local function gradient(parent, c1, c2, rot, transparency)
-    return new("UIGradient", {
-        Parent = parent, Rotation = rot or 90,
-        Color = ColorSequence.new(c1, c2),
-        Transparency = transparency or NumberSequence.new(0),
-    })
-end
-
-local function tween(inst, time, props, style)
-    local tw = TweenService:Create(inst,
-        TweenInfo.new(time, style or Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
+local function tween(inst, time, props)
+    local tw = TweenService:Create(inst, TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
     tw:Play()
     return tw
 end
 
+local function getHum()
+    local c = LocalPlayer.Character
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+local function getRoot()
+    local c = LocalPlayer.Character
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function makeDraggable(handle, target)
+    local dragging, startPos, startAbs = false
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startAbs, startPos = input.Position, target.Position
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if not dragging then return
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            local d = input.Position - startAbs
+            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
+                                        startPos.Y.Scale, startPos.Y.Offset + d.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
 local function createRainbowGradient(parent)
     local grad = new("UIGradient", {
-        Parent = parent,
-        Rotation = 0,
+        Parent = parent, Rotation = 0,
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 127)),
             ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 215, 0)),
@@ -110,41 +129,6 @@ local function createRainbowGradient(parent)
     return grad
 end
 
-local function getHum()
-    local c = LocalPlayer.Character
-    return c and c:FindFirstChildOfClass("Humanoid") or nil
-end
-
-local function getRoot()
-    local c = LocalPlayer.Character
-    return c and c:FindFirstChild("HumanoidRootPart") or nil
-end
-
-local function makeDraggable(handle, target, onTap)
-    local dragging, startPos, startAbs, moved = false, nil, nil, 0
-    handle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging, moved = true, 0
-            startAbs, startPos = input.Position, target.Position
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if not dragging then return end
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            local d = input.Position - startAbs
-            moved = math.max(moved, math.abs(d.X) + math.abs(d.Y))
-            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + d.X,
-                                        startPos.Y.Scale, startPos.Y.Offset + d.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if not dragging then return end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            if onTap and moved < 8 then onTap() end
-        end
-    end)
-end
 -- ===================== GUI =====================
 local oldGui = LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("QuocAnhHub")
 if oldGui then oldGui:Destroy() end
@@ -158,7 +142,7 @@ local gui = new("ScreenGui", {
 local root = new("Frame", {
     Name = "Root", Parent = gui,
     AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5),
-    Size = UDim2.fromOffset(340, 460),
+    Size = UDim2.fromOffset(320, 450),
     BackgroundTransparency = 1, Visible = false,
 })
 local uiScale = new("UIScale", { Parent = root })
@@ -167,17 +151,18 @@ local function fitScreen()
     local vp = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1280, 720)
     return math.clamp(math.min(vp.Y / 540, vp.X / 480), 0.66, 1)
 end
-local baseScale = fitScreen()
-uiScale.Scale = baseScale
+uiScale.Scale = fitScreen()
 
+-- GLOW
 local glow = new("Frame", {
     Parent = root, ZIndex = 0,
     Position = UDim2.new(0, -8, 0, -8), Size = UDim2.new(1, 16, 1, 16),
     BackgroundColor3 = THEME.Accent, BackgroundTransparency = 0.9, BorderSizePixel = 0,
 })
 corner(glow, 22)
-gradient(glow, THEME.Accent, THEME.Accent2, 140)
+createRainbowGradient(glow)
 
+-- MAIN
 local main = new("Frame", {
     Name = "Main", Parent = root, ZIndex = 1,
     Size = UDim2.fromScale(1, 1),
@@ -185,55 +170,32 @@ local main = new("Frame", {
 })
 corner(main, 16)
 stroke(main, THEME.Stroke, 1)
-gradient(main, THEME.BgLight, THEME.Bg, 90)
+createRainbowGradient(main)
 
 -- ===================== HEADER =====================
 local header = new("Frame", {
-    Parent = main, Size = UDim2.new(1, 0, 0, 52),
+    Parent = main, Size = UDim2.new(1, 0, 0, 48),
     BackgroundColor3 = THEME.Card, BackgroundTransparency = 0.45,
     BorderSizePixel = 0, Active = true,
 })
-gradient(header, THEME.Accent, THEME.Card, 0,
-    NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.82),
-        NumberSequenceKeypoint.new(0.55, 1),
-        NumberSequenceKeypoint.new(1, 1),
-    }))
-
-local accentBar = new("Frame", {
-    Parent = header, Position = UDim2.new(0, 12, 0, 11), Size = UDim2.fromOffset(3, 28),
-    BackgroundColor3 = THEME.Accent, BorderSizePixel = 0,
-})
-corner(accentBar, 2)
-gradient(accentBar, THEME.Accent, THEME.Accent2, 90)
+createRainbowGradient(header)
 
 new("TextLabel", {
     Parent = header, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 22, 0, 8), Size = UDim2.new(1, -100, 0, 18),
+    Position = UDim2.new(0, 16, 0, 8), Size = UDim2.new(1, -100, 0, 18),
     Font = Enum.Font.GothamBold, Text = "👑 QUỐC ANH HUB", TextSize = 16,
     TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
 })
 new("TextLabel", {
     Parent = header, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 22, 0, 26), Size = UDim2.new(1, -100, 0, 14),
+    Position = UDim2.new(0, 16, 0, 26), Size = UDim2.new(1, -100, 0, 14),
     Font = Enum.Font.Gotham, Text = "by QuocAnhMenu", TextSize = 10,
     TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
 })
 
-local fpsPill = new("Frame", {
-    Parent = header, Position = UDim2.new(1, -100, 0, 14), Size = UDim2.fromOffset(50, 18),
-    BackgroundColor3 = THEME.Bg, BackgroundTransparency = 0.25, BorderSizePixel = 0,
-})
-corner(fpsPill, 10)
-stroke(fpsPill, THEME.Stroke, 1)
-local fpsLabel = new("TextLabel", {
-    Parent = fpsPill, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1),
-    Font = Enum.Font.GothamBold, Text = "-- FPS", TextSize = 9, TextColor3 = THEME.Dim,
-})
-
 local closeBtn = new("TextButton", {
     Parent = header, AutoButtonColor = false,
-    Position = UDim2.new(1, -38, 0, 14), Size = UDim2.fromOffset(24, 24),
+    Position = UDim2.new(1, -38, 0, 12), Size = UDim2.fromOffset(24, 24),
     BackgroundColor3 = THEME.Card2, BorderSizePixel = 0,
     Font = Enum.Font.GothamBold, Text = "✕", TextSize = 12, TextColor3 = THEME.Dim,
 })
@@ -251,120 +213,23 @@ closeBtn.MouseButton1Click:Connect(function()
 end)
 
 new("Frame", {
-    Parent = main, Position = UDim2.new(0, 0, 0, 52), Size = UDim2.new(1, 0, 0, 1),
+    Parent = main, Position = UDim2.new(0, 0, 0, 48), Size = UDim2.new(1, 0, 0, 1),
     BackgroundColor3 = THEME.Stroke, BorderSizePixel = 0,
 })
 
--- ===================== SIDEBAR =====================
-local sidebar = new("Frame", {
+-- ===================== CONTENT (SCROLL) =====================
+local scroll = new("ScrollingFrame", {
     Parent = main,
-    Position = UDim2.new(0, 0, 0, 53),
-    Size = UDim2.new(0, 80, 0, 1, -85),
-    BackgroundColor3 = THEME.Card,
-    BackgroundTransparency = 0.3,
-    BorderSizePixel = 0,
-    ClipsDescendants = true,
+    Position = UDim2.new(0, 0, 0, 49), Size = UDim2.new(1, 0, 1, -49),
+    BackgroundTransparency = 1, BorderSizePixel = 0,
+    CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    ScrollingDirection = Enum.ScrollingDirection.Y,
+    ScrollBarThickness = 3, ScrollBarImageColor3 = THEME.Accent,
+    ScrollBarImageTransparency = 0.5, ClipsDescendants = true,
 })
-new("Frame", {
-    Parent = sidebar,
-    Position = UDim2.new(1, -1, 0, 0),
-    Size = UDim2.new(0, 1, 1, 0),
-    BackgroundColor3 = THEME.Stroke,
-    BorderSizePixel = 0,
-})
-
-local sideLayout = new("UIListLayout", {
-    Parent = sidebar,
-    Padding = UDim.new(0, 6),
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    HorizontalAlignment = Enum.HorizontalAlignment.Center,
-    VerticalAlignment = Enum.VerticalAlignment.Top,
-})
-new("UIPadding", {
-    Parent = sidebar,
-    PaddingTop = UDim.new(0, 10),
-    PaddingBottom = UDim.new(0, 10),
-})
-
-local tabButtons = {}
-local tabFrames = {}
-local tabIcons = {"⚔️", "🏃", "👁️", "ℹ️"}
-local tabFull = {"Chiến Đấu", "Di Chuyển", "Hình Ảnh", "Misc"}
-
-for i = 1, 4 do
-    local btn = new("TextButton", {
-        Parent = sidebar,
-        Size = UDim2.new(0, 60, 0, 44),
-        BackgroundColor3 = (i == 1) and THEME.Accent or Color3.fromRGB(30, 33, 45),
-        BackgroundTransparency = (i == 1) and 0.15 or 0.3,
-        BorderSizePixel = 0,
-        Font = Enum.Font.GothamBold,
-        Text = tabIcons[i],
-        TextSize = 18,
-        TextColor3 = (i == 1) and THEME.Accent or THEME.Dim,
-        AutoButtonColor = false,
-    })
-    corner(btn, 8)
-    stroke(btn, THEME.Stroke, 1)
-
-    local tip = new("TextLabel", {
-        Parent = btn,
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 1, 2),
-        Size = UDim2.new(1, 0, 0, 12),
-        Font = Enum.Font.GothamMedium,
-        Text = tabFull[i],
-        TextSize = 7,
-        TextColor3 = THEME.Dim,
-        TextXAlignment = Enum.TextXAlignment.Center,
-    })
-
-    btn.MouseButton1Click:Connect(function()
-        State.CurrentTab = i
-        for j, b in ipairs(tabButtons) do
-            local isActive = (j == i)
-            b.BackgroundColor3 = isActive and THEME.Accent or Color3.fromRGB(30, 33, 45)
-            b.BackgroundTransparency = isActive and 0.15 or 0.3
-            b.TextColor3 = isActive and THEME.Accent or THEME.Dim
-        end
-        for j, f in ipairs(tabFrames) do
-            f.Visible = (j == i)
-        end
-    end)
-
-    table.insert(tabButtons, btn)
-end
-
--- ===================== CONTENT AREA =====================
-local contentArea = new("Frame", {
-    Parent = main,
-    Position = UDim2.new(0, 85, 0, 53),
-    Size = UDim2.new(1, -90, 0, 1, -85),
-    BackgroundTransparency = 1,
-    ClipsDescendants = true,
-})
-
-for i = 1, 4 do
-    local frame = new("Frame", {
-        Parent = contentArea,
-        Size = UDim2.new(1, -8, 1, -8),
-        Position = UDim2.new(0, 4, 0, 4),
-        BackgroundTransparency = 1,
-        Visible = (i == 1),
-        ClipsDescendants = true,
-    })
-    new("UIListLayout", {
-        Parent = frame,
-        Padding = UDim.new(0, 6),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-    })
-    new("UIPadding", {
-        Parent = frame,
-        PaddingTop = UDim.new(0, 2),
-        PaddingBottom = UDim.new(0, 2),
-    })
-    table.insert(tabFrames, frame)
-end
+new("UIListLayout", { Parent = scroll, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
+new("UIPadding", { Parent = scroll, PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10),
+                   PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) })
 
 -- ===================== NÚT QA =====================
 local fab = new("TextButton", {
@@ -375,7 +240,7 @@ local fab = new("TextButton", {
     TextColor3 = Color3.fromRGB(8, 22, 18),
 })
 corner(fab, 24)
-gradient(fab, THEME.Accent, THEME.Accent2, 135)
+createRainbowGradient(fab)
 stroke(fab, Color3.new(1, 1, 1), 1.5).Transparency = 0.72
 
 fab.MouseButton1Click:Connect(function()
@@ -383,29 +248,21 @@ fab.MouseButton1Click:Connect(function()
     fab.Visible = false
 end)
 
-makeDraggable(header, root, nil)
-makeDraggable(fab, fab, nil)
+makeDraggable(header, root)
+makeDraggable(fab, fab)
 
-RunService.Heartbeat:Connect(function()
-    if not root.Visible then return end
-    local fps = math.floor(1 / RunService.Heartbeat:Wait())
-    fpsLabel.Text = fps .. " FPS"
-end)
-
--- ===================== KHỞI TẠO HIỂN THỊ =====================
--- Mặc định menu ẩn, nút QA hiện
+-- ===================== KHỞI TẠO =====================
 root.Visible = false
 fab.Visible = true
-
 -- ===================== COMPONENTS =====================
-local function addToggle(parent, text, defaultState, activeColor, callback)
+local function addToggle(parent, text, defaultState, callback)
     local row = new("Frame", {
         Parent = parent,
         Size = UDim2.new(1, -8, 0, 28),
         BackgroundTransparency = 1,
     })
 
-    local lbl = new("TextLabel", {
+    new("TextLabel", {
         Parent = row, BackgroundTransparency = 1,
         Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.65, 0, 1, 0),
         Font = Enum.Font.GothamMedium, Text = text, TextSize = 11,
@@ -416,7 +273,7 @@ local function addToggle(parent, text, defaultState, activeColor, callback)
         Parent = row, AutoButtonColor = false,
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -4, 0.5, 0), Size = UDim2.fromOffset(38, 18),
-        BackgroundColor3 = defaultState and activeColor or THEME.Off,
+        BackgroundColor3 = defaultState and THEME.Accent or THEME.Off,
         BorderSizePixel = 0, Text = "",
     })
     corner(btn, 9)
@@ -432,10 +289,10 @@ local function addToggle(parent, text, defaultState, activeColor, callback)
     btn.MouseButton1Click:Connect(function()
         state = not state
         local p = state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7)
-        local c = state and activeColor or THEME.Off
+        local c = state and THEME.Accent or THEME.Off
         tween(knob, 0.12, {Position = p})
         tween(btn, 0.12, {BackgroundColor3 = c})
-        if callback then callback(state) end
+        callback(state)
     end)
 
     return btn
@@ -448,7 +305,7 @@ local function addSlider(parent, text, minVal, maxVal, defaultVal, callback)
         BackgroundTransparency = 1,
     })
 
-    local lbl = new("TextLabel", {
+    new("TextLabel", {
         Parent = row, BackgroundTransparency = 1,
         Position = UDim2.new(0, 4, 0, 0), Size = UDim2.new(0.5, 0, 0, 14),
         Font = Enum.Font.GothamMedium, Text = text, TextSize = 10,
@@ -491,7 +348,7 @@ local function addSlider(parent, text, minVal, maxVal, defaultVal, callback)
         valLbl.Text = tostring(currentVal)
         fill.Size = UDim2.new(x, 0, 1, 0)
         knob.Position = UDim2.new(x, 0, 0.5, 0)
-        if callback then callback(currentVal) end
+        callback(currentVal)
     end
 
     local hit = new("TextButton", {
@@ -522,71 +379,44 @@ local function addSlider(parent, text, minVal, maxVal, defaultVal, callback)
     return row
 end
 
--- ===================== TAB 1: CHIẾN ĐẤU =====================
-local tabCombat = tabFrames[1]
+local function createCard(parent, title)
+    local card = new("Frame", {
+        Parent = parent,
+        Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
+        BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
+    })
+    corner(card, 10)
+    stroke(card, THEME.Stroke, 1)
 
+    new("TextLabel", {
+        Parent = card, BackgroundTransparency = 1,
+        Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
+        Font = Enum.Font.GothamBold, Text = title, TextSize = 12,
+        TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
+    })
+
+    local content = new("Frame", {
+        Parent = card,
+        Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
+    })
+    new("UIListLayout", { Parent = content, Padding = UDim.new(0, 2) })
+    new("UIPadding", { Parent = content, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
+
+    return content
+end
+
+-- ===================== TẠO MENU =====================
 -- Card Aimbot
-local aimCard = new("Frame", {
-    Parent = tabCombat,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(aimCard, 10)
-stroke(aimCard, THEME.Stroke, 1)
-gradient(aimCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = aimCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "🎯 AIMBOT", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local aimContent = new("Frame", {
-    Parent = aimCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = aimContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = aimContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(aimContent, "Enable Aimbot", false, Color3.fromRGB(220, 0, 255), function(v)
-    State.Aimbot.Enabled = v
-end)
-addToggle(aimContent, "FOV Circle (Cầu Vồng)", false, Color3.fromRGB(220, 0, 255), function(v)
-    State.Aimbot.FOVCircle = v
-end)
-addSlider(aimContent, "FOV Size", 30, 350, 150, function(v)
-    State.Aimbot.FOVSize = v
-end)
+local aimContent = createCard(scroll, "🎯 AIMBOT")
+addToggle(aimContent, "Enable Aimbot", false, function(v) State.Aimbot = v end)
+addToggle(aimContent, "FOV Circle (Cầu Vồng)", false, function(v) State.FOVCircle = v end)
+addSlider(aimContent, "FOV Size", 30, 350, 150, function(v) State.FOVSize = v end)
 
 -- Card Hitbox
-local hitboxCard = new("Frame", {
-    Parent = tabCombat,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(hitboxCard, 10)
-stroke(hitboxCard, THEME.Stroke, 1)
-gradient(hitboxCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = hitboxCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "📦 HITBOX", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local hitboxContent = new("Frame", {
-    Parent = hitboxCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = hitboxContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = hitboxContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(hitboxContent, "Enable Hitbox", false, Color3.fromRGB(0, 170, 255), function(v)
-    State.Hitbox.Enabled = v
+local hitboxContent = createCard(scroll, "📦 HITBOX")
+addToggle(hitboxContent, "Enable Hitbox", false, function(v) 
+    State.Hitbox = v
     if v then
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
@@ -595,7 +425,7 @@ addToggle(hitboxContent, "Enable Hitbox", false, Color3.fromRGB(0, 170, 255), fu
                     if not hitboxOriginalSizes[root] then
                         hitboxOriginalSizes[root] = root.Size
                     end
-                    root.Size = Vector3.new(State.Hitbox.Size, State.Hitbox.Size, State.Hitbox.Size)
+                    root.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
                     root.Transparency = 0.7
                     root.BrickColor = BrickColor.new("Really blue")
                     root.Material = Enum.Material.Neon
@@ -618,10 +448,9 @@ addToggle(hitboxContent, "Enable Hitbox", false, Color3.fromRGB(0, 170, 255), fu
         end
     end
 end)
-
-addSlider(hitboxContent, "Hitbox Size", 1, 50, 5, function(v)
-    State.Hitbox.Size = v
-    if State.Hitbox.Enabled then
+addSlider(hitboxContent, "Hitbox Size", 1, 50, 5, function(v) 
+    State.HitboxSize = v
+    if State.Hitbox then
         for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer and plr.Character then
                 local root = plr.Character:FindFirstChild("HumanoidRootPart")
@@ -632,153 +461,52 @@ addSlider(hitboxContent, "Hitbox Size", 1, 50, 5, function(v)
         end
     end
 end)
--- ===================== TAB 2: DI CHUYỂN =====================
-local tabMovement = tabFrames[2]
 
 -- Card Speed
-local speedCard = new("Frame", {
-    Parent = tabMovement,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(speedCard, 10)
-stroke(speedCard, THEME.Stroke, 1)
-gradient(speedCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = speedCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "🏃 SPEED", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local speedContent = new("Frame", {
-    Parent = speedCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = speedContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = speedContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(speedContent, "Enable Speed", false, Color3.fromRGB(0, 219, 146), function(v)
-    State.Speed.Enabled = v
+local speedContent = createCard(scroll, "🏃 SPEED")
+addToggle(speedContent, "Enable Speed", false, function(v) 
+    State.Speed = v
     local hum = getHum()
-    if hum then
-        hum.WalkSpeed = v and State.Speed.Value or 16
-    end
+    if hum then hum.WalkSpeed = v and State.SpeedValue or 16 end
 end)
-
-addSlider(speedContent, "Speed Value", 16, 100, 45, function(v)
-    State.Speed.Value = v
-    if State.Speed.Enabled then
+addSlider(speedContent, "Speed Value", 16, 100, 45, function(v) 
+    State.SpeedValue = v
+    if State.Speed then
         local hum = getHum()
         if hum then hum.WalkSpeed = v end
     end
 end)
 
 -- Card JumpBoost
-local jumpCard = new("Frame", {
-    Parent = tabMovement,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(jumpCard, 10)
-stroke(jumpCard, THEME.Stroke, 1)
-gradient(jumpCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = jumpCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "🦘 JUMP BOOST", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local jumpContent = new("Frame", {
-    Parent = jumpCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = jumpContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = jumpContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(jumpContent, "Enable JumpBoost", false, Color3.fromRGB(255, 190, 80), function(v)
-    State.JumpBoost.Enabled = v
+local jumpContent = createCard(scroll, "🦘 JUMP BOOST")
+addToggle(jumpContent, "Enable JumpBoost", false, function(v) 
+    State.JumpBoost = v
     local hum = getHum()
-    if hum then
-        hum.JumpPower = v and State.JumpBoost.Value or 50
-    end
+    if hum then hum.JumpPower = v and State.JumpValue or 50 end
 end)
-
-addSlider(jumpContent, "Jump Power", 50, 150, 90, function(v)
-    State.JumpBoost.Value = v
-    if State.JumpBoost.Enabled then
+addSlider(jumpContent, "Jump Power", 50, 150, 90, function(v) 
+    State.JumpValue = v
+    if State.JumpBoost then
         local hum = getHum()
         if hum then hum.JumpPower = v end
     end
 end)
-
--- Card Di Chuyển Đặc Biệt
-local specialCard = new("Frame", {
-    Parent = tabMovement,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(specialCard, 10)
-stroke(specialCard, THEME.Stroke, 1)
-gradient(specialCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = specialCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "⚡ DI CHUYỂN ĐẶC BIỆT", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local specialContent = new("Frame", {
-    Parent = specialCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = specialContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = specialContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(specialContent, "No Clip", false, Color3.fromRGB(255, 0, 127), function(v)
+-- Card No Clip
+local noclipContent = createCard(scroll, "👻 NO CLIP")
+addToggle(noclipContent, "Enable No Clip", false, function(v) 
     State.NoClip = v
 end)
 
-addToggle(specialContent, "🦅 Infinity Jump", false, Color3.fromRGB(0, 150, 255), function(v)
+-- Card Infinity Jump
+local infJumpContent = createCard(scroll, "🦅 INFINITY JUMP")
+addToggle(infJumpContent, "Enable Infinity Jump", false, function(v) 
     State.InfinityJump = v
 end)
--- ===================== TAB 3: HÌNH ẢNH =====================
-local tabVisuals = tabFrames[3]
 
 -- Card ESP
-local espCard = new("Frame", {
-    Parent = tabVisuals,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(espCard, 10)
-stroke(espCard, THEME.Stroke, 1)
-gradient(espCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = espCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "👁️ ESP", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local espContent = new("Frame", {
-    Parent = espCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = espContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = espContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(espContent, "Enable ESP", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.Enabled = v
+local espContent = createCard(scroll, "👁️ ESP")
+addToggle(espContent, "Enable ESP", false, function(v) 
+    State.ESP = v
     if not v then
         for _, obj in ipairs(espObjects) do
             if obj and obj.Parent then obj:Destroy() end
@@ -786,59 +514,23 @@ addToggle(espContent, "Enable ESP", false, Color3.fromRGB(0, 255, 127), function
         espObjects = {}
     end
 end)
+addToggle(espContent, "Player ESP", false, function(v) State.ESP_Player = v end)
+addToggle(espContent, "Name ESP", false, function(v) State.ESP_Name = v end)
+addToggle(espContent, "Box ESP", false, function(v) State.ESP_Box = v end)
+addToggle(espContent, "Health Bar", false, function(v) State.ESP_Health = v end)
+addToggle(espContent, "Tracers", false, function(v) State.ESP_Tracer = v end)
 
-addToggle(espContent, "Player ESP", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.Players = v
-end)
-
-addToggle(espContent, "Name ESP", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.Names = v
-end)
-
-addToggle(espContent, "Box ESP", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.Box = v
-end)
-
-addToggle(espContent, "Health Bar", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.HealthBar = v
-end)
-
-addToggle(espContent, "Tracers", false, Color3.fromRGB(0, 255, 127), function(v)
-    State.ESP.Tracers = v
-end)
-
--- Card Hiệu Ứng
-local effectCard = new("Frame", {
-    Parent = tabVisuals,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(effectCard, 10)
-stroke(effectCard, THEME.Stroke, 1)
-gradient(effectCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = effectCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "💡 HIỆU ỨNG", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local effectContent = new("Frame", {
-    Parent = effectCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = effectContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = effectContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(effectContent, "☀️ Fullbright", false, Color3.fromRGB(255, 190, 80), function(v)
+-- Card Fullbright
+local fullbrightContent = createCard(scroll, "☀️ FULLBRIGHT")
+addToggle(fullbrightContent, "Enable Fullbright", false, function(v) 
     State.Fullbright = v
     Lighting.Brightness = v and 2 or 1
     Lighting.ClockTime = v and 12 or 9
 end)
 
-addToggle(effectContent, "🔧 Fix Lag", false, Color3.fromRGB(0, 219, 146), function(v)
+-- Card Fix Lag
+local fixlagContent = createCard(scroll, "🔧 FIX LAG")
+addToggle(fixlagContent, "Enable Fix Lag", false, function(v) 
     State.FixLag = v
     if v then
         for _, obj in ipairs(workspace:GetDescendants()) do
@@ -849,109 +541,10 @@ addToggle(effectContent, "🔧 Fix Lag", false, Color3.fromRGB(0, 219, 146), fun
         pcall(function() Lighting.GlobalShadows = false end)
     end
 end)
--- ===================== TAB 4: MISC =====================
-local tabMisc = tabFrames[4]
 
--- Card Thông Tin
-local infoCard = new("Frame", {
-    Parent = tabMisc,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(infoCard, 10)
-stroke(infoCard, THEME.Stroke, 1)
-gradient(infoCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = infoCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "👤 THÔNG TIN NGƯỜI CHƠI", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local infoContent = new("Frame", {
-    Parent = infoCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = infoContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = infoContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-new("TextLabel", {
-    Parent = infoContent,
-    Size = UDim2.new(1, 0, 0, 20),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold, Text = "Tên: " .. LocalPlayer.Name, TextSize = 11,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-new("TextLabel", {
-    Parent = infoContent,
-    Size = UDim2.new(1, 0, 0, 20),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham, Text = "ID: " .. LocalPlayer.UserId, TextSize = 10,
-    TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-new("TextLabel", {
-    Parent = infoContent,
-    Size = UDim2.new(1, 0, 0, 20),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham, Text = "Tên hiển thị: " .. LocalPlayer.DisplayName, TextSize = 10,
-    TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local ageLabel = new("TextLabel", {
-    Parent = infoContent,
-    Size = UDim2.new(1, 0, 0, 20),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham, Text = "Ngày tạo: Đang tải...", TextSize = 10,
-    TextColor3 = THEME.Dim, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-spawn(function()
-    local success, data = pcall(function()
-        return game:HttpGet("https://users.roblox.com/v1/users/" .. LocalPlayer.UserId)
-    end)
-    if success and data then
-        local json = HttpService:JSONDecode(data)
-        if json and json.created then
-            local date = os.date("%d/%m/%Y", os.time({
-                year = tonumber(string.sub(json.created, 1, 4)),
-                month = tonumber(string.sub(json.created, 6, 7)),
-                day = tonumber(string.sub(json.created, 9, 10))
-            }))
-            ageLabel.Text = "Ngày tạo: " .. date
-        end
-    end
-end)
-
--- Card Tiện Ích
-local utilCard = new("Frame", {
-    Parent = tabMisc,
-    Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = THEME.Card, BorderSizePixel = 0,
-})
-corner(utilCard, 10)
-stroke(utilCard, THEME.Stroke, 1)
-gradient(utilCard, THEME.Card2, THEME.Card, 90)
-
-new("TextLabel", {
-    Parent = utilCard, BackgroundTransparency = 1,
-    Position = UDim2.new(0, 12, 0, 6), Size = UDim2.new(1, -12, 0, 18),
-    Font = Enum.Font.GothamBold, Text = "⚙️ TIỆN ÍCH", TextSize = 12,
-    TextColor3 = THEME.Text, TextXAlignment = Enum.TextXAlignment.Left,
-})
-
-local utilContent = new("Frame", {
-    Parent = utilCard,
-    Position = UDim2.new(0, 0, 0, 28), Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1,
-})
-new("UIListLayout", { Parent = utilContent, Padding = UDim.new(0, 2) })
-new("UIPadding", { Parent = utilContent, PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) })
-
-addToggle(utilContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255, 50, 50), function(v)
+-- Card Misc
+local miscContent = createCard(scroll, "⚙️ MISC")
+addToggle(miscContent, "♥️ God Mode (Trang trí)", false, function(v) 
     State.GodMode = v
     if v then
         local hum = getHum()
@@ -961,20 +554,15 @@ addToggle(utilContent, "♥️ God Mode (Trang trí)", false, Color3.fromRGB(255
         end
     end
 end)
+addToggle(miscContent, "Auto Respawn", false, function(v) State.AutoRespawn = v end)
+addToggle(miscContent, "Anti AFK", false, function(v) State.AntiAFK = v end)
 
-addToggle(utilContent, "Auto Respawn", false, Color3.fromRGB(0, 150, 255), function(v)
-    State.AutoRespawn = v
-end)
-
-addToggle(utilContent, "Anti AFK", false, Color3.fromRGB(255, 190, 80), function(v)
-    State.AntiAFK = v
-end)
-
+-- Nút Join New Server
 local joinBtn = new("TextButton", {
-    Parent = utilContent,
-    Size = UDim2.new(1, 0, 0, 28),
+    Parent = scroll,
+    Size = UDim2.new(1, -8, 0, 32),
     BackgroundColor3 = THEME.Card2, BorderSizePixel = 0,
-    Font = Enum.Font.GothamBold, Text = "🌐 JOIN NEW SERVER", TextSize = 11,
+    Font = Enum.Font.GothamBold, Text = "🌐 JOIN NEW SERVER", TextSize = 12,
     TextColor3 = THEME.Gold,
 })
 corner(joinBtn, 8)
@@ -983,11 +571,12 @@ joinBtn.MouseButton1Click:Connect(function()
     TeleportService:Teleport(game.PlaceId)
 end)
 
+-- Nút Destroy
 local destroyBtn = new("TextButton", {
-    Parent = utilContent,
-    Size = UDim2.new(1, 0, 0, 28),
+    Parent = scroll,
+    Size = UDim2.new(1, -8, 0, 32),
     BackgroundColor3 = THEME.Card2, BorderSizePixel = 0,
-    Font = Enum.Font.GothamBold, Text = "💀 DESTROY", TextSize = 11,
+    Font = Enum.Font.GothamBold, Text = "💀 DESTROY", TextSize = 12,
     TextColor3 = THEME.Red,
 })
 corner(destroyBtn, 8)
@@ -1009,13 +598,13 @@ FOVring.Visible = false
 FOVring.Thickness = 2
 FOVring.Color = Color3.fromRGB(255, 0, 127)
 FOVring.Filled = false
-FOVring.Radius = State.Aimbot.FOVSize
+FOVring.Radius = State.FOVSize
 FOVring.Position = camera.ViewportSize / 2
 
 local function updateFOVCircle()
-    if State.Aimbot.Enabled and State.Aimbot.FOVCircle then
+    if State.Aimbot and State.FOVCircle then
         FOVring.Visible = true
-        FOVring.Radius = State.Aimbot.FOVSize
+        FOVring.Radius = State.FOVSize
         FOVring.Position = camera.ViewportSize / 2
         fovRainbowAngle = (fovRainbowAngle + 0.5) % 360
         local hue = fovRainbowAngle / 360
@@ -1042,7 +631,7 @@ local function findNearestTarget()
                     local screenPos, onScreen = camera:WorldToViewportPoint(root.Position)
                     if onScreen then
                         local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-                        if dist < State.Aimbot.FOVSize and dist < nearestDist then
+                        if dist < State.FOVSize and dist < nearestDist then
                             nearestDist = dist
                             nearest = other
                         end
@@ -1086,7 +675,7 @@ end
 RunService.Heartbeat:Connect(function()
     updateFOVCircle()
     
-    if not State.Aimbot.Enabled then
+    if not State.Aimbot then
         aimbotTarget = nil
         return
     end
@@ -1116,7 +705,7 @@ RunService.Heartbeat:Connect(function()
 
     local pos = aimPart.Position
     local velocity = root and root.Velocity or Vector3.new()
-    local predictedPos = pos + velocity * State.Aimbot.Prediction
+    local predictedPos = pos + velocity * 0.035
 
     local isTouching = false
     if UserInputService.TouchEnabled then
@@ -1131,7 +720,7 @@ RunService.Heartbeat:Connect(function()
     if isTouching or not UserInputService.TouchEnabled then
         local currentCF = camera.CFrame
         local targetDirection = (predictedPos - currentCF.Position).Unit
-        local newLookVector = currentCF.LookVector:Lerp(targetDirection, State.Aimbot.Smoothness)
+        local newLookVector = currentCF.LookVector:Lerp(targetDirection, 0.96)
         camera.CFrame = CFrame.new(currentCF.Position, currentCF.Position + newLookVector)
     end
 
@@ -1139,7 +728,7 @@ RunService.Heartbeat:Connect(function()
     if onScreen then
         local center = camera.ViewportSize / 2
         local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
-        if dist < State.Aimbot.FOVSize * 0.3 then
+        if dist < State.FOVSize * 0.3 then
             shoot()
         end
     end
@@ -1186,11 +775,11 @@ LocalPlayer.CharacterAdded:Connect(function(char)
         end)
     end
     local hum = char:WaitForChild("Humanoid")
-    if State.Speed.Enabled then
-        hum.WalkSpeed = State.Speed.Value
+    if State.Speed then
+        hum.WalkSpeed = State.SpeedValue
     end
-    if State.JumpBoost.Enabled then
-        hum.JumpPower = State.JumpBoost.Value
+    if State.JumpBoost then
+        hum.JumpPower = State.JumpValue
     end
 end)
 
@@ -1210,7 +799,7 @@ local function updateESP()
     end
     espObjects = {}
     
-    if not State.ESP.Enabled then return end
+    if not State.ESP then return end
 
     for _, other in ipairs(Players:GetPlayers()) do
         if other ~= LocalPlayer and other.Character then
@@ -1218,7 +807,7 @@ local function updateESP()
             local hum = char:FindFirstChildOfClass("Humanoid")
             local root = char:FindFirstChild("HumanoidRootPart")
             if hum and hum.Health > 0 and root then
-                if State.ESP.Box then
+                if State.ESP_Box then
                     local box = Instance.new("BoxHandleAdornment")
                     box.Size = Vector3.new(4, 5, 2)
                     box.Adornee = root
@@ -1229,7 +818,7 @@ local function updateESP()
                     box.Parent = root
                     table.insert(espObjects, box)
                 end
-                if State.ESP.Names then
+                if State.ESP_Name then
                     local billboard = Instance.new("BillboardGui")
                     billboard.Size = UDim2.new(0, 150, 0, 20)
                     billboard.Adornee = root
@@ -1246,7 +835,7 @@ local function updateESP()
                     label.Parent = billboard
                     table.insert(espObjects, billboard)
                 end
-                if State.ESP.HealthBar then
+                if State.ESP_Health then
                     local hpBar = Instance.new("BillboardGui")
                     hpBar.Size = UDim2.new(0, 50, 0, 4)
                     hpBar.Adornee = root
@@ -1270,7 +859,7 @@ local function updateESP()
                     bar.BackgroundColor3 = healthPercent > 0.5 and Color3.fromRGB(0, 255, 0) or (healthPercent > 0.25 and Color3.fromRGB(255, 200, 0) or Color3.fromRGB(255, 0, 0))
                     table.insert(espObjects, hpBar)
                 end
-                if State.ESP.Tracers then
+                if State.ESP_Tracer then
                     local tracer = Instance.new("LineHandleAdornment")
                     tracer.Length = 10
                     tracer.Thickness = 1
@@ -1294,13 +883,13 @@ end)
 Players.PlayerAdded:Connect(function(plr)
     plr.CharacterAdded:Connect(function()
         task.wait(0.3)
-        if State.Hitbox.Enabled then
+        if State.Hitbox then
             local root = plr.Character:FindFirstChild("HumanoidRootPart")
             if root then
                 if not hitboxOriginalSizes[root] then
                     hitboxOriginalSizes[root] = root.Size
                 end
-                root.Size = Vector3.new(State.Hitbox.Size, State.Hitbox.Size, State.Hitbox.Size)
+                root.Size = Vector3.new(State.HitboxSize, State.HitboxSize, State.HitboxSize)
                 root.Transparency = 0.7
                 root.BrickColor = BrickColor.new("Really blue")
                 root.Material = Enum.Material.Neon
@@ -1329,9 +918,21 @@ UserInputService.InputBegan:Connect(function(input, gp)
 end)
 
 -- ===================== KHỞI TẠO =====================
+-- Mặc định menu đóng, nút QA hiện
 root.Visible = false
 fab.Visible = true
+
+-- Cập nhật FPS trong header (nếu có)
+local fpsLabel = main:FindFirstChild("FPSLabel")
+if fpsLabel then
+    RunService.Heartbeat:Connect(function()
+        if not root.Visible then return end
+        local fps = math.floor(1 / RunService.Heartbeat:Wait())
+        fpsLabel.Text = fps .. " FPS"
+    end)
+end
 
 print("👑 Quốc Anh Hub đã tải thành công!")
 print("Tất cả tính năng đều TẮT khi vào game.")
 print("Bấm QA để mở menu, RightShift để bật/tắt menu.")
+print("✅ FULL SCRIPT HOÀN CHỈNH - 6 PHẦN")
