@@ -1,4 +1,6 @@
--- LocalScript: QA Hub GUI (UI Only - Fixed Sliders, Dynamic Items & Full Colors)
+-- ==========================================================
+-- PHẦN 1: KHỞI TẠO DỊCH VỤ, BIẾN, NÚT QA VÀ KHUNG MENU
+-- ==========================================================
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -9,16 +11,18 @@ local Camera = workspace.CurrentCamera
 
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Xóa GUI cũ nếu có
 if playerGui:FindFirstChild("QAHubGui") then
 	playerGui.QAHubGui:Destroy()
 end
 
+-- Tạo ScreenGui chính
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "QAHubGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- 1. NÚT NỔI QA (DRAGGABLE)
+-- Tạo Nút QA Nổi
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "QAToggle"
 toggleBtn.Size = UDim2.new(0, 45, 0, 45)
@@ -43,7 +47,7 @@ btnStroke.Parent = toggleBtn
 local btnTextGradient = Instance.new("UIGradient")
 btnTextGradient.Parent = toggleBtn
 
--- 2. KHUNG MENU CHÍNH (DRAGGABLE)
+-- Tạo Khung Menu Chính
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "QAHubMain"
 mainFrame.Size = UDim2.new(0, 270, 0, 340)
@@ -65,10 +69,15 @@ mainStroke.Thickness = 2.5
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mainStroke.Parent = mainFrame
 
+-- Sự kiện bấm Nút QA để mở/đóng menu
 toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
--- 3. HEADER & TIÊU ĐỀ
+-- ==========================================================
+-- PHẦN 2: HEADER, NÚT ĐÓNG, PROFILE CARD, HIỆU ỨNG CẦU VỒNG
+-- ==========================================================
+
+-- Header Title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -45, 0, 35)
 titleLabel.Position = UDim2.new(0, 12, 0, 5)
@@ -83,6 +92,7 @@ titleLabel.Parent = mainFrame
 local titleGradient = Instance.new("UIGradient")
 titleGradient.Parent = titleLabel
 
+-- Nút Đóng
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(1, -32, 0, 8)
@@ -101,7 +111,7 @@ closeBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = false
 end)
 
--- 4. PROFILE CARD (LOGO QA)
+-- Profile Card
 local profileCard = Instance.new("Frame")
 profileCard.Size = UDim2.new(1, -20, 0, 50)
 profileCard.Position = UDim2.new(0, 10, 0, 40)
@@ -159,7 +169,8 @@ deviceText.TextSize = 10
 deviceText.Font = Enum.Font.Gotham
 deviceText.TextXAlignment = Enum.TextXAlignment.Left
 deviceText.Parent = profileCard
--- --- HIỆU ỨNG CẦU VỒNG TRƯỢT TỪ TRÁI SANG PHẢI ---
+
+-- Hiệu ứng Cầu Vồng chạy liên tục
 local rainbowSequence = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
 	ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
@@ -186,8 +197,10 @@ RunService.RenderStepped:Connect(function(dt)
 	btnTextGradient.Offset = Vector2.new(offset, 0)
 	logoTextGradient.Offset = Vector2.new(offset, 0)
 end)
+-- ==========================================================
+-- PHẦN 3: SCROLLING FRAME, UI LIST VÀ KHAI BÁO BIẾN TRẠNG THÁI
+-- ==========================================================
 
--- 5. SCROLLING FRAME
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, -16, 1, -100)
 scrollFrame.Position = UDim2.new(0, 8, 0, 95)
@@ -202,6 +215,7 @@ listLayout.Padding = UDim.new(0, 6)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Parent = scrollFrame
 
+-- Tự động giãn chiều cao của scroll
 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 end)
@@ -212,7 +226,7 @@ local function GetNextOrder()
 	return currentLayoutOrder
 end
 
--- LƯU TRẠNG THÁI TOÀN BỘ TÍNH NĂNG
+-- Biến lưu trạng thái (Không được tắt khi đổi code phần sau)
 local ESP_State = false
 local ESP_Color = Color3.fromRGB(255,0,0)
 local ESPMob_State = false
@@ -230,7 +244,10 @@ local JumpBoost_Value = 50
 local Hitbox_State = false
 local Hitbox_Value = 1
 local Hitbox_Color = Color3.fromRGB(255,0,0)
--- HÀM TẠO TOGGLE (NÚT BẬT TẮT)
+-- ==========================================================
+-- PHẦN 4: HÀM TẠO TOGGLE (NÚT BẬT TẮT) VÀ SLIDER (THANH TRƯỢT)
+-- ==========================================================
+
 local function CreateToggle(name, subtext, onToggleCallback)
 	local toggleFrame = Instance.new("Frame")
 	toggleFrame.Size = UDim2.new(1, -6, 0, 42)
@@ -303,7 +320,7 @@ local function CreateToggle(name, subtext, onToggleCallback)
 	return toggleFrame
 end
 
--- HÀM TẠO SLIDER (ĐÃ SỬA LỖI KÉO TÙY CHỈNH MƯỢT MÀ)
+-- Hàm tạo Slider (Kéo chỉnh giá trị)
 local function CreateSlider(name, min, max, default)
 	local sliderFrame = Instance.new("Frame")
 	sliderFrame.Size = UDim2.new(1, -6, 0, 44)
@@ -382,7 +399,10 @@ local function CreateSlider(name, min, max, default)
 
 	return sliderFrame, function() return value end
 end
--- HÀM TẠO BẢNG CHỌN MÀU
+-- ==========================================================
+-- PHẦN 5: HÀM TẠO COLOR PICKER, FIX LAG VÀ KHỞI TẠO CÁC MỤC
+-- ==========================================================
+
 local function CreateColorPicker(name)
 	local pickerFrame = Instance.new("Frame")
 	pickerFrame.Size = UDim2.new(1, -6, 0, 75)
@@ -464,7 +484,7 @@ local function CreateColorPicker(name)
 	return pickerFrame, function() return currentColor end
 end
 
--- HÀM TẠO LỰA CHỌN FIX LAG (NHẸ / MẠNH)
+-- Hàm Fix Lag (Nhẹ / Mạnh)
 local function CreateFixLagOptions()
 	local optFrame = Instance.new("Frame")
 	optFrame.Size = UDim2.new(1, -6, 0, 38)
@@ -523,9 +543,8 @@ local function CreateFixLagOptions()
 	return optFrame
 end
 
--- 6. KHỞI TẠO CÁC MỤC THEO THỨ TỰ ĐÚNG VỊ TRÍ HÀNG DƯỚI
-local espColorPicker
-local espColorGetter
+-- KHỞI TẠO CÁC MỤC TRONG MENU
+local espColorPicker, espColorGetter
 local espToggle = CreateToggle("ESP Player", "Hiện người chơi", function(state)
 	ESP_State = state
 	espColorPicker.Visible = state
@@ -539,11 +558,6 @@ end)
 
 local fullbrightToggle = CreateToggle("Fullbright", "Sáng toàn bản đồ", function(state)
 	Fullbright_State = state
-	if not state then
-		Lighting.Brightness = 1
-		Lighting.ClockTime = 14
-		Lighting.GlobalShadows = true
-	end
 end)
 
 local fixLagOptions
@@ -562,8 +576,7 @@ CreateToggle("infjump", "Nhảy vô tận", function(state)
 	InfJump_State = state
 end)
 
-local speedSlider
-local speedSliderGetter
+local speedSlider, speedSliderGetter
 local speedToggle = CreateToggle("Speed", "Tăng tốc độ di chuyển", function(state)
 	Speed_State = state
 	speedSlider.Visible = state
@@ -571,8 +584,7 @@ end)
 speedSlider, speedSliderGetter = CreateSlider("Speed Value", 16, 300, 100)
 speedSlider.Visible = false
 
-local jumpSlider
-local jumpSliderGetter
+local jumpSlider, jumpSliderGetter
 local jumpToggle = CreateToggle("Jump Boost", "Tăng lực nhảy", function(state)
 	JumpBoost_State = state
 	jumpSlider.Visible = state
@@ -580,11 +592,8 @@ end)
 jumpSlider, jumpSliderGetter = CreateSlider("Jump Power", 50, 300, 100)
 jumpSlider.Visible = false
 
-local hitboxSlider
-local hitboxColorPicker
-local hitboxSliderGetter
-local hitboxColorGetter
-local hitboxToggle = CreateToggle("Hitbox Player", "Tăng hitbox người chơi", function(state)
+local hitboxSlider, hitboxColorPicker, hitboxSliderGetter, hitboxColorGetter
+local hitboxToggle = CreateToggle("Hitbox Player", "Đổi size & màu TẤT CẢ người chơi", function(state)
 	Hitbox_State = state
 	hitboxSlider.Visible = state
 	hitboxColorPicker.Visible = state
@@ -593,13 +602,13 @@ hitboxSlider, hitboxSliderGetter = CreateSlider("Size Hitbox", 1, 50, 20)
 hitboxColorPicker, hitboxColorGetter = CreateColorPicker("Màu Hitbox")
 hitboxSlider.Visible = false
 hitboxColorPicker.Visible = false
--- ==========================================
--- BẮT ĐẦU PHẦN LÕI LOGIC TÍNH NĂNG (LÒNG ĐỎ)
--- ==========================================
+-- ==========================================================
+-- PHẦN 6: LOGIC CHÍNH (SPEED, JUMP, NOCLIP, FIX LAG, HITBOX)
+-- ==========================================================
 local defaultWalkSpeed = 16
 local defaultJumpPower = 50
 
--- Đặt logic cho Infinite Jump
+-- Logic Infinite Jump
 UserInputService.JumpRequest:Connect(function()
 	if InfJump_State and LocalPlayer.Character then
 		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
@@ -609,7 +618,7 @@ UserInputService.JumpRequest:Connect(function()
 	end
 end)
 
--- Vòng lặp chính xử lý mọi tính năng
+-- Vòng lặp chính xử lý liên tục các tính năng
 RunService.Heartbeat:Connect(function()
 	local char = LocalPlayer.Character
 	if not char then return end
@@ -618,30 +627,47 @@ RunService.Heartbeat:Connect(function()
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if not hum or not root then return end
 
-	-- Fix Lag & Fullbright
+	-- FIX LAG THẬT SỰ (Tắt bóng, tắt viền, chỉnh màu đen)
+	if FixLag_State then
+		Lighting.GlobalShadows = false
+		Lighting.Outlines = false
+		
+		if FixLag_Mode == "Light" then
+			Lighting.ShadowSoftness = 0
+			Lighting.EnvironmentDiffuseScale = 0
+			Lighting.EnvironmentSpecularScale = 0
+		elseif FixLag_Mode == "Strong" then
+			Lighting.ShadowSoftness = 0
+			Lighting.EnvironmentDiffuseScale = 0
+			Lighting.EnvironmentSpecularScale = 0
+			Lighting.ClockTime = 12
+			Lighting.Brightness = 1
+			workspace.DescendantAdded:Connect(function(desc)
+				if desc:IsA("BasePart") then
+					desc.Material = Enum.Material.SmoothPlastic
+				end
+			end)
+		end
+	else
+		-- Reset lại mặc định khi tắt
+		Lighting.GlobalShadows = true
+		Lighting.Outlines = true
+		Lighting.ShadowSoftness = 1
+		Lighting.EnvironmentDiffuseScale = 1
+		Lighting.EnvironmentSpecularScale = 1
+	end
+
+	-- Fullbright
 	if Fullbright_State then
 		Lighting.Brightness = 3
 		Lighting.ClockTime = 12
-		Lighting.GlobalShadows = false
+		Lighting.Outlines = false
 	else
-		Lighting.GlobalShadows = true
+		Lighting.Brightness = 1
+		Lighting.ClockTime = 14
 	end
 
-	if FixLag_State then
-		Lighting.GlobalShadows = false
-		if FixLag_Mode == "Light" then
-			Lighting.Outlines = false
-		elseif FixLag_Mode == "Strong" then
-			Lighting.Outlines = false
-			Lighting.ShadowSoftness = 0
-			workspace:SetAttribute("StreamingEnabled", true)
-		end
-	else
-		Lighting.Outlines = true
-		Lighting.ShadowSoftness = 1
-	end
-
-	-- Speed & Jump Boost (Tự động Reset khi tắt)
+	-- Speed & Jump Boost (Tự động Reset về mặc định khi tắt)
 	Speed_Value = speedSliderGetter()
 	JumpBoost_Value = jumpSliderGetter()
 
@@ -657,35 +683,88 @@ RunService.Heartbeat:Connect(function()
 		hum.JumpPower = defaultJumpPower
 	end
 
-	-- Noclip
+	-- NOCLIP (Dùng lệnh Executor nếu có để chắc chắn xuyên tường)
 	if Noclip_State then
-		root.CanCollide = false
+		-- Thử dùng lệnh chuẩn của Executor
+		if sethiddenproperty then
+			sethiddenproperty(root, "CanCollide", false)
+		else
+			root.CanCollide = false
+		end
+		-- Xử lý riêng cho các khớp
+		for _, part in ipairs(char:GetChildren()) do
+			if part:IsA("BasePart") then
+				if sethiddenproperty then
+					sethiddenproperty(part, "CanCollide", false)
+				else
+					part.CanCollide = false
+				end
+			end
+		end
 	else
-		root.CanCollide = true
+		-- Reset lại khi tắt
+		if sethiddenproperty then
+			sethiddenproperty(root, "CanCollide", true)
+		else
+			root.CanCollide = true
+		end
+		for _, part in ipairs(char:GetChildren()) do
+			if part:IsA("BasePart") then
+				if sethiddenproperty then
+					sethiddenproperty(part, "CanCollide", true)
+				else
+					part.CanCollide = true
+				end
+			end
+		end
 	end
 
-	-- Hitbox (Scale RootPart)
+	-- HITBOX: Thay đổi kích thước và màu của TẤT CẢ NGƯỜI CHƠI TRONG SERVER
 	if Hitbox_State then
 		Hitbox_Value = hitboxSliderGetter()
 		Hitbox_Color = hitboxColorGetter()
-		local scale = Hitbox_Value / 10 -- Chỉnh tỷ lệ to lên
-		root.Size = Vector3.new(2 + scale, 2 + scale, 1 + scale)
 		
-		if Hitbox_Color == "Rainbow" then
-			root.Color = Color3.fromHSV(tick() % 1, 1, 1)
-		else
-			root.Color = Hitbox_Color
+		local scale = Hitbox_Value / 10 -- Chỉnh tỷ lệ to lên
+
+		for _, plr in ipairs(Players:GetPlayers()) do
+			local char2 = plr.Character
+			if char2 then
+				local root2 = char2:FindFirstChild("HumanoidRootPart")
+				if root2 then
+					-- Đổi size to
+					root2.Size = Vector3.new(2 + scale, 2 + scale, 1 + scale)
+					
+					-- Đổi màu
+					if Hitbox_Color == "Rainbow" then
+						root2.Color = Color3.fromHSV(tick() % 1, 1, 1)
+					else
+						root2.Color = Hitbox_Color
+					end
+				end
+			end
 		end
 	else
-		root.Size = Vector3.new(2, 2, 1)
-		root.Color = Color3.fromRGB(255, 255, 255)
+		-- Reset về mặc định khi tắt
+		for _, plr in ipairs(Players:GetPlayers()) do
+			local char2 = plr.Character
+			if char2 then
+				local root2 = char2:FindFirstChild("HumanoidRootPart")
+				if root2 then
+					root2.Size = Vector3.new(2, 2, 1)
+					root2.Color = Color3.fromRGB(255, 255, 255)
+				end
+			end
+		end
 	end
 end)
--- Logic Vẽ ESP
+-- ==========================================================
+-- PHẦN 7: LOGIC ESP - HIỆN TẤT CẢ NGƯỜI CHƠI & QUÁI VẬT
+-- ==========================================================
 RunService.RenderStepped:Connect(function()
+	-- Lấy màu đang chọn từ menu
 	ESP_Color = espColorGetter()
-	
-	-- Xóa hết ESP cũ nếu tắt
+
+	-- Xóa toàn bộ Drawing cũ nếu tắt ESP hoặc Mob
 	if not ESP_State and not ESPMob_State then
 		for _, d in ipairs(getgc(true)) do
 			if typeof(d) == "Drawing" then d:Remove() end
@@ -693,6 +772,7 @@ RunService.RenderStepped:Connect(function()
 		return
 	end
 
+	-- Vẽ ESP cho Người Chơi
 	if ESP_State then
 		for _, plr in ipairs(Players:GetPlayers()) do
 			if plr ~= LocalPlayer and plr.Character then
@@ -712,6 +792,7 @@ RunService.RenderStepped:Connect(function()
 		end
 	end
 
+	-- Vẽ ESP cho Quái Vật (Mob)
 	if ESPMob_State then
 		for _, obj in ipairs(workspace:GetDescendants()) do
 			if obj:IsA("Humanoid") and obj.Parent and obj.Parent:FindFirstChild("HumanoidRootPart") and not Players:GetPlayerFromCharacter(obj.Parent) then
