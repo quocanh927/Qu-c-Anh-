@@ -3414,18 +3414,6 @@ closeBtn.MouseButton1Click:Connect(
 
 fab.Text = "QA"
 
-fab.MouseButton1Click:Connect(
-    function()
-
-        if State.MenuOpen then
-            hideMenu()
-        else
-            showMenu()
-        end
-
-    end
-)
-
 
 --==============================================================
 -- PHÍM RIGHT SHIFT
@@ -3665,14 +3653,22 @@ makeDraggable(
 
 
 --==============================================================
--- FAB DRAG
+-- QA BUTTON
 --==============================================================
 
-makeDraggable(
-    fab,
-    fab
-)
+fab.MouseButton1Click:Connect(function()
 
+    if menuAnimating then
+        return
+    end
+
+    if root.Visible then
+        hideMenu()
+    else
+        showMenu()
+    end
+
+end)
 
 --==============================================================
 -- YOUTUBE BUTTON
