@@ -1898,39 +1898,158 @@ local function SetHitbox(state)
 
 	else
 
-		for player in pairs(
-			OriginalHitboxes
-		) do
+--========================================================
+-- HITBOX PLAYER - FIXED
+--========================================================
 
-			RestoreHitbox(player)
+local HitboxFolder = Instance.new("Folder")
+HitboxFolder.Name = "QAHubHitboxes"
+HitboxFolder.Parent = screenGui
 
+local function GetHitboxSize()
+	if SliderObjects["Size Hitbox"] then
+		return SliderObjects["Size Hitbox"].Get()
+	end
+
+	return 30
+end
+
+local function GetHitboxColor()
+	local data = ColorObjects["Màu Hitbox"]
+
+	if data then
+		if data.Rainbow then
+			return Color3.fromHSV(
+				rainbowOffset,
+				0.85,
+				1
+			)
 		end
 
+		return data.Color
+	end
+
+	return Color3.fromRGB(170, 0, 255)
+end
+
+local function RemoveHitbox(player)
+
+	local old = HitboxFolder:FindFirstChild(
+		"Hitbox_" .. player.UserId
+	)
+
+	if old then
+		old:Destroy()
+	end
+end
+
+local function RemoveAllHitboxes()
+
+	for _, obj in ipairs(
+		HitboxFolder:GetChildren()
+	) do
+		obj:Destroy()
 	end
 
 end
 
-Players.PlayerAdded:Connect(function(player)
+local function CreateHitbox(player)
 
-	player.CharacterAdded:Connect(function()
+	if player == LocalPlayer then
+		return
+	end
 
-		task.wait(0.5)
+	if not player.Character then
+		return
+	end
 
-		if States.Hitbox then
-			ApplyHitbox(player)
+	local characterModel = player.Character
+
+	local root =
+		characterModel:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not root then
+		return
+	end
+
+	RemoveHitbox(player)
+
+	local size = GetHitboxSize()
+
+	-- Kích thước tăng mạnh hơn
+	local scale = math.clamp(
+		size / 5,
+		1,
+		30
+	)
+
+	local hitbox = Instance.new("Part")
+
+	hitbox.Name =
+		"Hitbox_" .. player.UserId
+
+	hitbox.Size = Vector3.new(
+		2.5 * scale,
+		3.5 * scale,
+		2.5 * scale
+	)
+
+	hitbox.CFrame = root.CFrame
+
+	hitbox.Anchored = false
+	hitbox.CanCollide = false
+	hitbox.CanTouch = false
+	hitbox.CanQuery = false
+
+	hitbox.Transparency = 0.75
+
+	hitbox.Material =
+		Enum.Material.ForceField
+
+	hitbox.Color =
+		GetHitboxColor()
+
+	hitbox.Massless = true
+
+	hitbox.Parent =
+		HitboxFolder
+
+	-- Gắn vào người chơi bằng WeldConstraint
+	local weld =
+		Instance.new("WeldConstraint")
+
+	weld.Part0 = hitbox
+	weld.Part1 = root
+	weld.Parent = hitbox
+end
+
+local function SetHitbox(state)
+
+	States.Hitbox = state
+
+	-- TẮT = XÓA HẾT
+	if not state then
+		RemoveAllHitboxes()
+		return
+	end
+
+	-- BẬT
+	for _, player in ipairs(
+		Players:GetPlayers()
+	) do
+
+		if player ~= LocalPlayer then
+			CreateHitbox(player)
 		end
 
-	end)
+	end
+end
+--========================================================
+-- UPDATE HITBOX
+--========================================================
 
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-
-	OriginalHitboxes[player] = nil
-
-end)
-
--- cập nhật hitbox + màu theo slider
 RunService.RenderStepped:Connect(function()
 
 	if not States.Hitbox then
@@ -1942,7 +2061,55 @@ RunService.RenderStepped:Connect(function()
 	) do
 
 		if player ~= LocalPlayer then
-			ApplyHitbox(player)
+
+			local characterModel =
+				player.Character
+
+			if characterModel then
+
+				local root =
+					characterModel:
+					FindFirstChild(
+						"HumanoidRootPart"
+					)
+
+				local hitbox =
+					HitboxFolder:
+					FindFirstChild(
+						"Hitbox_" ..
+						player.UserId
+					)
+
+				if root and hitbox then
+
+					local size =
+						GetHitboxSize()
+
+					local scale =
+						math.clamp(
+							size / 10,
+							1,
+							15
+						)
+
+					hitbox.Size =
+						Vector3.new(
+							2.5 * scale,
+							3.5 * scale,
+							2.5 * scale
+						)
+
+					hitbox.Color =
+						GetHitboxColor()
+
+				elseif root then
+
+					CreateHitbox(player)
+
+				end
+
+			end
+
 		end
 
 	end
@@ -2083,10 +2250,7 @@ RunService.RenderStepped:Connect(function()
 
 			if root then
 
-				-- SelectionBox giúp nhìn hitbox rõ hơn
-				local box =
-					root:FindFirstChild(
-						"QAHitboxVisual"
+			
 					)
 
 				if not box then
