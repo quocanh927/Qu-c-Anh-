@@ -1483,47 +1483,39 @@ end)
 --========================================================
 
 --========================================================
--- FIX LAG
+-- FIX LAG MỚI
+-- NHẸ / MẠNH
 --========================================================
 
-local SavedEffects = {}
+local SavedFixLag = {}
+local FixLagApplied = false
+
+local function SaveProperty(obj, property, value)
+	if not SavedFixLag[obj] then
+		SavedFixLag[obj] = {}
+	end
+
+	if SavedFixLag[obj][property] == nil then
+		SavedFixLag[obj][property] = value
+	end
+end
 
 local function SetFixLag(state)
 
 	States.FixLag = state
 
-	if state then
+	if not state then
 
-		SavedEffects = {}
+		-- Khôi phục những thứ có thể khôi phục
+		for obj, properties in pairs(SavedFixLag) do
 
-		for _, obj in ipairs(
-			workspace:GetDescendants()
-		) do
+			if obj and obj.Parent then
 
-			if obj:IsA("ParticleEmitter")
-				or obj:IsA("Trail")
-				or obj:IsA("Beam")
-				or obj:IsA("Smoke")
-				or obj:IsA("Fire") then
+				for property, oldValue in pairs(properties) do
 
-				SavedEffects[obj] =
-					obj.Enabled
-
-				obj.Enabled = false
-			end
-
-		end
-
-		if FixLagMode == "Mạnh" then
-
-			for _, obj in ipairs(
-				workspace:GetDescendants()
-			) do
-
-				if obj:IsA("BasePart") then
-
-					obj.Material =
-						Enum.Material.SmoothPlastic
+					pcall(function()
+						obj[property] = oldValue
+					end)
 
 				end
 
@@ -1531,28 +1523,218 @@ local function SetFixLag(state)
 
 		end
 
-	else
+		SavedFixLag = {}
+		FixLagApplied = false
 
-		for obj, oldValue in pairs(
-			SavedEffects
+		return
+	end
+
+	FixLagApplied = true
+
+	--====================================================
+	-- NHẸ:
+	-- XÓA/TẮT TOÀN BỘ HIỆU ỨNG NẶNG
+	--====================================================
+
+	for _, obj in ipairs(
+		workspace:GetDescendants()
+	) do
+
+		-- Particle
+		if obj:IsA("ParticleEmitter") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		-- Trail
+		elseif obj:IsA("Trail") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		-- Beam
+		elseif obj:IsA("Beam") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		-- Smoke
+		elseif obj:IsA("Smoke") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		-- Fire
+		elseif obj:IsA("Fire") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		-- Sparkles
+		elseif obj:IsA("Sparkles") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		end
+
+	end
+
+	--====================================================
+	-- TẮT BÓNG + HIỆU ỨNG ÁNH SÁNG
+	--====================================================
+
+	SaveProperty(
+		Lighting,
+		"GlobalShadows",
+		Lighting.GlobalShadows
+	)
+
+	Lighting.GlobalShadows = false
+
+	for _, obj in ipairs(
+		Lighting:GetChildren()
+	) do
+
+		if obj:IsA("BloomEffect")
+			or obj:IsA("BlurEffect")
+			or obj:IsA("ColorCorrectionEffect")
+			or obj:IsA("DepthOfFieldEffect")
+			or obj:IsA("SunRaysEffect") then
+
+			SaveProperty(
+				obj,
+				"Enabled",
+				obj.Enabled
+			)
+
+			obj.Enabled = false
+
+		end
+
+	end
+
+	--====================================================
+	-- MẠNH
+	--====================================================
+
+	if FixLagMode == "Mạnh" then
+
+		for _, obj in ipairs(
+			workspace:GetDescendants()
 		) do
 
-			if obj
-				and obj.Parent then
+			-- Làm vật liệu nhẹ hơn
+			if obj:IsA("BasePart") then
 
-				obj.Enabled =
-					oldValue
+				SaveProperty(
+					obj,
+					"Material",
+					obj.Material
+				)
+
+				obj.Material =
+					Enum.Material.SmoothPlastic
+
+				-- Tắt bóng từng part
+				SaveProperty(
+					obj,
+					"CastShadow",
+					obj.CastShadow
+				)
+
+				obj.CastShadow = false
+
+			-- Xóa texture
+			elseif obj:IsA("Decal")
+				or obj:IsA("Texture") then
+
+				SaveProperty(
+					obj,
+					"Transparency",
+					obj.Transparency
+				)
+
+				obj.Transparency = 1
 
 			end
 
 		end
 
-		SavedEffects = {}
+		-- Xóa hiệu ứng ánh sáng mạnh
+		for _, obj in ipairs(
+			Lighting:GetChildren()
+		) do
+
+			if obj:IsA("Sky")
+				or obj:IsA("Atmosphere") then
+
+				SaveProperty(
+					obj,
+					"Parent",
+					obj.Parent
+				)
+
+				obj.Parent = nil
+
+			end
+
+		end
+
+		-- Xóa hiệu ứng ánh sáng trong map
+		for _, obj in ipairs(
+			workspace:GetDescendants()
+		) do
+
+			if obj:IsA("PointLight")
+				or obj:IsA("SpotLight")
+				or obj:IsA("SurfaceLight") then
+
+				SaveProperty(
+					obj,
+					"Enabled",
+					obj.Enabled
+				)
+
+				obj.Enabled = false
+
+			end
+
+		end
 
 	end
 
 end
-
 --========================================================
 -- HITBOX
 --========================================================
@@ -1681,17 +1863,17 @@ local function ApplyHitbox(player)
 		GetHitboxSize()
 
 	local scale =
-		math.max(
-			1,
-			size / 10
-		)
-
+	math.clamp(
+		size / 8,
+		1,
+		12
+	)
 	root.Size =
-		Vector3.new(
-			2 * scale,
-			2 * scale,
-			2 * scale
-		)
+	Vector3.new(
+		2.5 * scale,
+		3 * scale,
+		2.5 * scale
+	)
 
 	root.Transparency = 0.5
 
