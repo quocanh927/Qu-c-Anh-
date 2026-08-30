@@ -3652,21 +3652,55 @@ makeDraggable(
 )
 
 
+makeDraggable(
+    fab,
+    fab,
+    function()
+        if menuAnimating then
+            return
+        end
+
+        root.Visible = not root.Visible
+        State.MenuOpen = root.Visible
+    end
+)
 --==============================================================
--- QA BUTTON
+-- QA BUTTON: MỞ / ĐÓNG MENU
 --==============================================================
 
-fab.MouseButton1Click:Connect(function()
+fab.Activated:Connect(function()
 
     if menuAnimating then
         return
     end
 
     if root.Visible then
-        hideMenu()
+
+        root.Visible = false
+        State.MenuOpen = false
+
     else
-        showMenu()
+
+        root.Visible = true
+        State.MenuOpen = true
+
     end
+
+end)
+
+
+--==============================================================
+-- NÚT X: ĐÓNG MENU
+--==============================================================
+
+closeBtn.Activated:Connect(function()
+
+    if menuAnimating then
+        return
+    end
+
+    root.Visible = false
+    State.MenuOpen = false
 
 end)
 
