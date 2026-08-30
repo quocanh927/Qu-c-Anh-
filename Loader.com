@@ -1,28 +1,53 @@
--- ==========================================================
--- PHẦN 1: KHỞI TẠO DỊCH VỤ, BIẾN, NÚT QA VÀ KHUNG MENU
--- ==========================================================
+--========================================================
+-- QUOC ANH HUB
+-- PART 1/7 - CORE + MENU + RAINBOW
+-- Roblox Studio LocalScript
+--========================================================
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
-local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
+local LocalPlayer = Players.LocalPlayer
 local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Xóa GUI cũ nếu có
 if playerGui:FindFirstChild("QAHubGui") then
 	playerGui.QAHubGui:Destroy()
 end
 
--- Tạo ScreenGui chính
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "QAHubGui"
 screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = playerGui
 
--- Tạo Nút QA Nổi
+--========================================================
+-- RAINBOW
+--========================================================
+
+local rainbowSequence = ColorSequence.new({
+	ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+	ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 120, 0)),
+	ColorSequenceKeypoint.new(0.32, Color3.fromRGB(255, 255, 0)),
+	ColorSequenceKeypoint.new(0.48, Color3.fromRGB(0, 255, 0)),
+	ColorSequenceKeypoint.new(0.64, Color3.fromRGB(0, 255, 255)),
+	ColorSequenceKeypoint.new(0.80, Color3.fromRGB(0, 100, 255)),
+	ColorSequenceKeypoint.new(0.92, Color3.fromRGB(170, 0, 255)),
+	ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 200))
+})
+
+local rainbowObjects = {}
+
+local function AddRainbow(obj)
+	table.insert(rainbowObjects, obj)
+end
+
+--========================================================
+-- NÚT QA
+--========================================================
+
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Name = "QAToggle"
 toggleBtn.Size = UDim2.new(0, 45, 0, 45)
@@ -32,6 +57,7 @@ toggleBtn.Text = "QA"
 toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 toggleBtn.TextSize = 18
 toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.AutoButtonColor = false
 toggleBtn.Active = true
 toggleBtn.Draggable = true
 toggleBtn.Parent = screenGui
@@ -43,11 +69,17 @@ btnCorner.Parent = toggleBtn
 local btnStroke = Instance.new("UIStroke")
 btnStroke.Thickness = 2.5
 btnStroke.Parent = toggleBtn
+AddRainbow(btnStroke)
 
 local btnTextGradient = Instance.new("UIGradient")
+btnTextGradient.Color = rainbowSequence
 btnTextGradient.Parent = toggleBtn
+AddRainbow(btnTextGradient)
 
--- Tạo Khung Menu Chính
+--========================================================
+-- MENU CHÍNH
+--========================================================
+
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "QAHubMain"
 mainFrame.Size = UDim2.new(0, 270, 0, 340)
@@ -68,16 +100,16 @@ local mainStroke = Instance.new("UIStroke")
 mainStroke.Thickness = 2.5
 mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 mainStroke.Parent = mainFrame
+AddRainbow(mainStroke)
 
--- Sự kiện bấm Nút QA để mở/đóng menu
 toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
--- ==========================================================
--- PHẦN 2: HEADER, NÚT ĐÓNG, PROFILE CARD, HIỆU ỨNG CẦU VỒNG
--- ==========================================================
 
--- Header Title
+--========================================================
+-- HEADER
+--========================================================
+
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -45, 0, 35)
 titleLabel.Position = UDim2.new(0, 12, 0, 5)
@@ -90,9 +122,10 @@ titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = mainFrame
 
 local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = rainbowSequence
 titleGradient.Parent = titleLabel
+AddRainbow(titleGradient)
 
--- Nút Đóng
 local closeBtn = Instance.new("TextButton")
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.Position = UDim2.new(1, -32, 0, 8)
@@ -101,6 +134,7 @@ closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(255, 200, 0)
 closeBtn.TextSize = 12
 closeBtn.Font = Enum.Font.GothamBold
+closeBtn.AutoButtonColor = false
 closeBtn.Parent = mainFrame
 
 local closeCorner = Instance.new("UICorner")
@@ -111,7 +145,10 @@ closeBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = false
 end)
 
--- Profile Card
+--========================================================
+-- PROFILE CARD
+--========================================================
+
 local profileCard = Instance.new("Frame")
 profileCard.Size = UDim2.new(1, -20, 0, 50)
 profileCard.Position = UDim2.new(0, 10, 0, 40)
@@ -135,6 +172,7 @@ logoCorner.Parent = logoFrame
 local logoStroke = Instance.new("UIStroke")
 logoStroke.Thickness = 2
 logoStroke.Parent = logoFrame
+AddRainbow(logoStroke)
 
 local logoText = Instance.new("TextLabel")
 logoText.Size = UDim2.new(1, 0, 1, 0)
@@ -146,7 +184,9 @@ logoText.Font = Enum.Font.GothamBold
 logoText.Parent = logoFrame
 
 local logoTextGradient = Instance.new("UIGradient")
+logoTextGradient.Color = rainbowSequence
 logoTextGradient.Parent = logoText
+AddRainbow(logoTextGradient)
 
 local userInfo = Instance.new("TextLabel")
 userInfo.Size = UDim2.new(1, -55, 0, 16)
@@ -170,36 +210,35 @@ deviceText.Font = Enum.Font.Gotham
 deviceText.TextXAlignment = Enum.TextXAlignment.Left
 deviceText.Parent = profileCard
 
--- Hiệu ứng Cầu Vồng chạy liên tục
-local rainbowSequence = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
-	ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255, 255, 0)),
-	ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 255, 0)),
-	ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0, 255, 255)),
-	ColorSequenceKeypoint.new(0.8, Color3.fromRGB(170, 0, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 200))
-})
+--========================================================
+-- RAINBOW ANIMATION
+--========================================================
 
-titleGradient.Color = rainbowSequence
-btnTextGradient.Color = rainbowSequence
-logoTextGradient.Color = rainbowSequence
+local rainbowOffset = 0
 
-local offset = 0
 RunService.RenderStepped:Connect(function(dt)
-	offset = (offset + dt * 0.8) % 1
-	local singleColor = Color3.fromHSV(offset, 0.85, 1)
+	rainbowOffset = (rainbowOffset + dt * 0.8) % 1
 
-	mainStroke.Color = singleColor
-	btnStroke.Color = singleColor
-	logoStroke.Color = singleColor
+	local singleColor = Color3.fromHSV(
+		rainbowOffset,
+		0.85,
+		1
+	)
 
-	titleGradient.Offset = Vector2.new(offset, 0)
-	btnTextGradient.Offset = Vector2.new(offset, 0)
-	logoTextGradient.Offset = Vector2.new(offset, 0)
+	for _, obj in ipairs(rainbowObjects) do
+		if obj and obj.Parent then
+			if obj:IsA("UIGradient") then
+				obj.Offset = Vector2.new(rainbowOffset, 0)
+			elseif obj:IsA("UIStroke") then
+				obj.Color = singleColor
+			end
+		end
+	end
 end)
--- ==========================================================
--- PHẦN 3: SCROLLING FRAME, UI LIST VÀ KHAI BÁO BIẾN TRẠNG THÁI
--- ==========================================================
+
+--========================================================
+-- SCROLL FRAME
+--========================================================
 
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, -16, 1, -100)
@@ -208,6 +247,7 @@ scrollFrame.BackgroundTransparency = 1
 scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 3
 scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(180, 0, 255)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 scrollFrame.Parent = mainFrame
 
 local listLayout = Instance.new("UIListLayout")
@@ -215,43 +255,35 @@ listLayout.Padding = UDim.new(0, 6)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Parent = scrollFrame
 
--- Tự động giãn chiều cao của scroll
 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+	scrollFrame.CanvasSize = UDim2.new(
+		0,
+		0,
+		0,
+		listLayout.AbsoluteContentSize.Y + 10
+	)
 end)
 
 local currentLayoutOrder = 0
+
 local function GetNextOrder()
-	currentLayoutOrder = currentLayoutOrder + 1
+	currentLayoutOrder += 1
 	return currentLayoutOrder
 end
+--========================================================
+-- PART 2/7 - TOGGLE + SLIDER
+--========================================================
 
--- Biến lưu trạng thái (Không được tắt khi đổi code phần sau)
-local ESP_State = false
-local ESP_Color = Color3.fromRGB(255,0,0)
-local ESPMob_State = false
+local ToggleObjects = {}
+local SliderObjects = {}
 
-local Fullbright_State = false
-local FixLag_State = false
-local FixLag_Mode = "Light"
+local function CreateToggle(name, subtext, callback)
 
-local Noclip_State = false
-local InfJump_State = false
-local Speed_State = false
-local Speed_Value = 16
-local JumpBoost_State = false
-local JumpBoost_Value = 50
-local Hitbox_State = false
-local Hitbox_Value = 1
-local Hitbox_Color = Color3.fromRGB(255,0,0)
--- ==========================================================
--- PHẦN 4: HÀM TẠO TOGGLE (NÚT BẬT TẮT) VÀ SLIDER (THANH TRƯỢT)
--- ==========================================================
-
-local function CreateToggle(name, subtext, onToggleCallback)
 	local toggleFrame = Instance.new("Frame")
+	toggleFrame.Name = "Toggle_" .. name:gsub("%s+", "_")
 	toggleFrame.Size = UDim2.new(1, -6, 0, 42)
 	toggleFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+	toggleFrame.BorderSizePixel = 0
 	toggleFrame.LayoutOrder = GetNextOrder()
 	toggleFrame.Parent = scrollFrame
 
@@ -282,6 +314,7 @@ local function CreateToggle(name, subtext, onToggleCallback)
 	subLabel.Parent = toggleFrame
 
 	local switchTrack = Instance.new("TextButton")
+	switchTrack.Name = "Switch"
 	switchTrack.Size = UDim2.new(0, 40, 0, 20)
 	switchTrack.Position = UDim2.new(1, -48, 0.5, -10)
 	switchTrack.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -294,6 +327,7 @@ local function CreateToggle(name, subtext, onToggleCallback)
 	trackCorner.Parent = switchTrack
 
 	local knob = Instance.new("Frame")
+	knob.Name = "Knob"
 	knob.Size = UDim2.new(0, 14, 0, 14)
 	knob.Position = UDim2.new(0, 3, 0.5, -7)
 	knob.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
@@ -304,27 +338,78 @@ local function CreateToggle(name, subtext, onToggleCallback)
 	knobCorner.Parent = knob
 
 	local toggled = false
-	switchTrack.MouseButton1Click:Connect(function()
-		toggled = not toggled
-		local targetPos = toggled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
-		local targetBgColor = toggled and Color3.fromRGB(170, 0, 255) or Color3.fromRGB(45, 45, 60)
 
-		TweenService:Create(knob, TweenInfo.new(0.2), {Position = targetPos}):Play()
-		TweenService:Create(switchTrack, TweenInfo.new(0.2), {BackgroundColor3 = targetBgColor}):Play()
+	local function SetState(state)
+		toggled = state
 
-		if onToggleCallback then
-			onToggleCallback(toggled)
+		local targetPos
+
+		if state then
+			targetPos = UDim2.new(1, -17, 0.5, -7)
+		else
+			targetPos = UDim2.new(0, 3, 0.5, -7)
 		end
+
+		local targetColor
+
+		if state then
+			targetColor = Color3.fromRGB(170, 0, 255)
+		else
+			targetColor = Color3.fromRGB(45, 45, 60)
+		end
+
+		TweenService:Create(
+			knob,
+			TweenInfo.new(
+				0.2,
+				Enum.EasingStyle.Quart,
+				Enum.EasingDirection.Out
+			),
+			{Position = targetPos}
+		):Play()
+
+		TweenService:Create(
+			switchTrack,
+			TweenInfo.new(
+				0.2,
+				Enum.EasingStyle.Quart,
+				Enum.EasingDirection.Out
+			),
+			{BackgroundColor3 = targetColor}
+		):Play()
+
+		if callback then
+			callback(state)
+		end
+	end
+
+	switchTrack.MouseButton1Click:Connect(function()
+		SetState(not toggled)
 	end)
+
+	ToggleObjects[name] = {
+		Frame = toggleFrame,
+		Button = switchTrack,
+		Set = SetState,
+		Get = function()
+			return toggled
+		end
+	}
 
 	return toggleFrame
 end
 
--- Hàm tạo Slider (Kéo chỉnh giá trị)
+--========================================================
+-- SLIDER
+--========================================================
+
 local function CreateSlider(name, min, max, default)
+
 	local sliderFrame = Instance.new("Frame")
+	sliderFrame.Name = "Slider_" .. name:gsub("%s+", "_")
 	sliderFrame.Size = UDim2.new(1, -6, 0, 44)
 	sliderFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+	sliderFrame.BorderSizePixel = 0
 	sliderFrame.LayoutOrder = GetNextOrder()
 	sliderFrame.Parent = scrollFrame
 
@@ -344,6 +429,7 @@ local function CreateSlider(name, min, max, default)
 	label.Parent = sliderFrame
 
 	local track = Instance.new("TextButton")
+	track.Name = "Track"
 	track.Size = UDim2.new(1, -16, 0, 8)
 	track.Position = UDim2.new(0, 8, 0, 26)
 	track.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -356,8 +442,15 @@ local function CreateSlider(name, min, max, default)
 	trackCorner.Parent = track
 
 	local fill = Instance.new("Frame")
-	fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+	fill.Name = "Fill"
+	fill.Size = UDim2.new(
+		math.clamp((default - min) / (max - min), 0, 1),
+		0,
+		1,
+		0
+	)
 	fill.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
+	fill.BorderSizePixel = 0
 	fill.Parent = track
 
 	local fillCorner = Instance.new("UICorner")
@@ -367,46 +460,148 @@ local function CreateSlider(name, min, max, default)
 	local dragging = false
 	local value = default
 
-	local function UpdateSlider(input)
-		local absPos = track.AbsolutePosition.X
-		local absSize = track.AbsoluteSize.X
-		local mouseX = input.Position.X
-		local scale = math.clamp((mouseX - absPos) / absSize, 0, 1)
-		value = math.floor(min + (max - min) * scale)
-		
-		fill.Size = UDim2.new(scale, 0, 1, 0)
+	local function SetValue(newValue)
+
+		value = math.clamp(
+			math.floor(newValue + 0.5),
+			min,
+			max
+		)
+
+		local scale = (value - min) / (max - min)
+
+		fill.Size = UDim2.new(
+			scale,
+			0,
+			1,
+			0
+		)
+
 		label.Text = name .. ": " .. value
+
+		sliderFrame:SetAttribute("Value", value)
+	end
+
+	local function UpdateFromInput(input)
+
+		local x = input.Position.X
+
+		local left = track.AbsolutePosition.X
+		local width = track.AbsoluteSize.X
+
+		if width <= 0 then
+			return
+		end
+
+		local scale = math.clamp(
+			(x - left) / width,
+			0,
+			1
+		)
+
+		SetValue(
+			min + (max - min) * scale
+		)
 	end
 
 	track.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			UpdateSlider(input)
-		end
-	end)
 
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+
+			dragging = true
+			UpdateFromInput(input)
 		end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			UpdateSlider(input)
+
+		if not dragging then
+			return
+		end
+
+		if input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch then
+
+			UpdateFromInput(input)
 		end
 	end)
 
-	return sliderFrame, function() return value end
+	UserInputService.InputEnded:Connect(function(input)
+
+		if input.UserInputType == Enum.UserInputType.MouseButton1
+			or input.UserInputType == Enum.UserInputType.Touch then
+
+			dragging = false
+		end
+	end)
+
+	SetValue(default)
+
+	SliderObjects[name] = {
+		Frame = sliderFrame,
+
+		Get = function()
+			return value
+		end,
+
+		Set = SetValue
+	}
+
+	return sliderFrame
 end
--- ==========================================================
--- PHẦN 5: HÀM TẠO COLOR PICKER, FIX LAG VÀ KHỞI TẠO CÁC MỤC
--- ==========================================================
+--========================================================
+-- PART 3/7 - COLOR PICKER + FIX LAG
+--========================================================
+
+local ColorObjects = {}
+
+local ColorList = {
+	{
+		Name = "Đỏ",
+		Color = Color3.fromRGB(255, 0, 0)
+	},
+	{
+		Name = "Xanh Lá",
+		Color = Color3.fromRGB(0, 255, 0)
+	},
+	{
+		Name = "Xanh Nước",
+		Color = Color3.fromRGB(0, 180, 255)
+	},
+	{
+		Name = "Vàng",
+		Color = Color3.fromRGB(255, 230, 0)
+	},
+	{
+		Name = "Tím",
+		Color = Color3.fromRGB(160, 0, 255)
+	},
+	{
+		Name = "Hồng",
+		Color = Color3.fromRGB(255, 100, 200)
+	},
+	{
+		Name = "Trắng",
+		Color = Color3.fromRGB(255, 255, 255)
+	},
+	{
+		Name = "Đen",
+		Color = Color3.fromRGB(30, 30, 30)
+	},
+	{
+		Name = "Cầu Vồng",
+		Rainbow = true
+	}
+}
 
 local function CreateColorPicker(name)
+
 	local pickerFrame = Instance.new("Frame")
+	pickerFrame.Name = "Color_" .. name:gsub("%s+", "_")
 	pickerFrame.Size = UDim2.new(1, -6, 0, 75)
 	pickerFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+	pickerFrame.BorderSizePixel = 0
 	pickerFrame.LayoutOrder = GetNextOrder()
 	pickerFrame.Parent = scrollFrame
 
@@ -436,59 +631,97 @@ local function CreateColorPicker(name)
 	grid.CellPadding = UDim2.new(0, 4, 0, 4)
 	grid.Parent = colorsContainer
 
-	local currentColor = Color3.fromRGB(255, 0, 0)
+	local selectedColor = Color3.fromRGB(170, 0, 255)
+	local selectedRainbow = false
 
-	local colorsList = {
-		{Name = "Đỏ", Color = Color3.fromRGB(255, 0, 0)},
-		{Name = "Xanh Lá", Color = Color3.fromRGB(0, 255, 0)},
-		{Name = "Xanh Nước", Color = Color3.fromRGB(0, 180, 255)},
-		{Name = "Vàng", Color = Color3.fromRGB(255, 230, 0)},
-		{Name = "Tím", Color = Color3.fromRGB(160, 0, 255)},
-		{Name = "Hồng", Color = Color3.fromRGB(255, 100, 200)},
-		{Name = "Trắng", Color = Color3.fromRGB(255, 255, 255)},
-		{Name = "Đen", Color = Color3.fromRGB(30, 30, 30)},
-		{Name = "Cầu Vồng", IsRainbow = true}
-	}
+	for _, info in ipairs(ColorList) do
 
-	for _, cInfo in ipairs(colorsList) do
-		local cBtn = Instance.new("TextButton")
-		cBtn.Text = ""
-		cBtn.Parent = colorsContainer
+		local button = Instance.new("TextButton")
+		button.Name = info.Name
+		button.Text = ""
+		button.AutoButtonColor = false
+		button.Parent = colorsContainer
 
-		local cCorner = Instance.new("UICorner")
-		cCorner.CornerRadius = UDim.new(0, 4)
-		cCorner.Parent = cBtn
+		local buttonCorner = Instance.new("UICorner")
+		buttonCorner.CornerRadius = UDim.new(0, 4)
+		buttonCorner.Parent = button
 
-		if cInfo.IsRainbow then
-			cBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+		if info.Rainbow then
+
+			button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
 			local gradient = Instance.new("UIGradient")
+
 			gradient.Color = ColorSequence.new({
-				ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
-				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0,255,0)),
-				ColorSequenceKeypoint.new(1, Color3.fromRGB(0,100,255))
+				ColorSequenceKeypoint.new(
+					0,
+					Color3.fromRGB(255, 0, 0)
+				),
+
+				ColorSequenceKeypoint.new(
+					0.25,
+					Color3.fromRGB(255, 255, 0)
+				),
+
+				ColorSequenceKeypoint.new(
+					0.5,
+					Color3.fromRGB(0, 255, 0)
+				),
+
+				ColorSequenceKeypoint.new(
+					0.75,
+					Color3.fromRGB(0, 255, 255)
+				),
+
+				ColorSequenceKeypoint.new(
+					1,
+					Color3.fromRGB(170, 0, 255)
+				)
 			})
-			gradient.Parent = cBtn
+
+			gradient.Parent = button
+			AddRainbow(gradient)
+
 		else
-			cBtn.BackgroundColor3 = cInfo.Color
+			button.BackgroundColor3 = info.Color
 		end
 
-		cBtn.MouseButton1Click:Connect(function()
-			if cInfo.IsRainbow then
-				currentColor = "Rainbow"
+		button.MouseButton1Click:Connect(function()
+
+			if info.Rainbow then
+				selectedRainbow = true
 			else
-				currentColor = cInfo.Color
+				selectedRainbow = false
+				selectedColor = info.Color
 			end
+
+			ColorObjects[name].Color = selectedColor
+			ColorObjects[name].Rainbow = selectedRainbow
 		end)
 	end
 
-	return pickerFrame, function() return currentColor end
+	ColorObjects[name] = {
+		Frame = pickerFrame,
+		Color = selectedColor,
+		Rainbow = selectedRainbow
+	}
+
+	return pickerFrame
 end
 
--- Hàm Fix Lag (Nhẹ / Mạnh)
+--========================================================
+-- FIX LAG OPTIONS
+--========================================================
+
+local FixLagMode = "Nhẹ"
+
 local function CreateFixLagOptions()
+
 	local optFrame = Instance.new("Frame")
+	optFrame.Name = "FixLagOptions"
 	optFrame.Size = UDim2.new(1, -6, 0, 38)
 	optFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 26)
+	optFrame.BorderSizePixel = 0
 	optFrame.LayoutOrder = GetNextOrder()
 	optFrame.Parent = scrollFrame
 
@@ -504,6 +737,7 @@ local function CreateFixLagOptions()
 	lightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	lightBtn.TextSize = 10
 	lightBtn.Font = Enum.Font.GothamBold
+	lightBtn.AutoButtonColor = false
 	lightBtn.Parent = optFrame
 
 	local lightCorner = Instance.new("UICorner")
@@ -518,297 +752,1239 @@ local function CreateFixLagOptions()
 	strongBtn.TextColor3 = Color3.fromRGB(180, 180, 200)
 	strongBtn.TextSize = 10
 	strongBtn.Font = Enum.Font.GothamBold
+	strongBtn.AutoButtonColor = false
 	strongBtn.Parent = optFrame
 
 	local strongCorner = Instance.new("UICorner")
 	strongCorner.CornerRadius = UDim.new(0, 5)
 	strongCorner.Parent = strongBtn
 
-	lightBtn.MouseButton1Click:Connect(function()
-		FixLag_Mode = "Light"
-		lightBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
-		lightBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		strongBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-		strongBtn.TextColor3 = Color3.fromRGB(180, 180, 200)
-	end)
+	local function SelectLight()
+		FixLagMode = "Nhẹ"
 
-	strongBtn.MouseButton1Click:Connect(function()
-		FixLag_Mode = "Strong"
-		strongBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
-		strongBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-		lightBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
-		lightBtn.TextColor3 = Color3.fromRGB(180, 180, 200)
-	end)
+		lightBtn.BackgroundColor3 =
+			Color3.fromRGB(170, 0, 255)
+
+		lightBtn.TextColor3 =
+			Color3.fromRGB(255, 255, 255)
+
+		strongBtn.BackgroundColor3 =
+			Color3.fromRGB(35, 35, 50)
+
+		strongBtn.TextColor3 =
+			Color3.fromRGB(180, 180, 200)
+	end
+
+	local function SelectStrong()
+		FixLagMode = "Mạnh"
+
+		strongBtn.BackgroundColor3 =
+			Color3.fromRGB(170, 0, 255)
+
+		strongBtn.TextColor3 =
+			Color3.fromRGB(255, 255, 255)
+
+		lightBtn.BackgroundColor3 =
+			Color3.fromRGB(35, 35, 50)
+
+		lightBtn.TextColor3 =
+			Color3.fromRGB(180, 180, 200)
+	end
+
+	lightBtn.MouseButton1Click:Connect(SelectLight)
+	strongBtn.MouseButton1Click:Connect(SelectStrong)
 
 	return optFrame
 end
+--========================================================
+-- PART 4/7 - TẠO TOÀN BỘ MENU
+--========================================================
 
--- KHỞI TẠO CÁC MỤC TRONG MENU
-local espColorPicker, espColorGetter
-local espToggle = CreateToggle("ESP Player", "Hiện người chơi", function(state)
-	ESP_State = state
-	espColorPicker.Visible = state
-end)
-espColorPicker, espColorGetter = CreateColorPicker("Màu ESP Player")
+-- ESP PLAYER
+local espColorPicker
+
+CreateToggle(
+	"ESP Player",
+	"Hiện người chơi",
+	function(state)
+		espColorPicker.Visible = state
+	end
+)
+
+espColorPicker = CreateColorPicker(
+	"Màu ESP Player"
+)
+
 espColorPicker.Visible = false
 
-local espMobToggle = CreateToggle("ESP Mob", "Hiện quái vật", function(state)
-	ESPMob_State = state
-end)
+-- ESP MOB
+CreateToggle(
+	"ESP Mob",
+	"Hiện quái vật"
+)
 
-local fullbrightToggle = CreateToggle("Fullbright", "Sáng toàn bản đồ", function(state)
-	Fullbright_State = state
-end)
+-- FULLBRIGHT
+CreateToggle(
+	"Fullbright",
+	"Sáng toàn bản đồ"
+)
 
+-- FIX LAG
 local fixLagOptions
-local fixLagToggle = CreateToggle("Fix Lag", "Giảm lag hiệu quả", function(state)
-	FixLag_State = state
-	fixLagOptions.Visible = state
-end)
+
+CreateToggle(
+	"Fix Lag",
+	"Giảm lag hiệu quả",
+	function(state)
+		fixLagOptions.Visible = state
+	end
+)
+
 fixLagOptions = CreateFixLagOptions()
 fixLagOptions.Visible = false
 
-CreateToggle("Noclip", "Đi xuyên tường", function(state)
-	Noclip_State = state
-end)
+-- NOCLIP
+CreateToggle(
+	"Noclip",
+	"Đi xuyên tường"
+)
 
-CreateToggle("infjump", "Nhảy vô tận", function(state)
-	InfJump_State = state
-end)
+-- INFJUMP
+CreateToggle(
+	"infjump",
+	"Nhảy vô tận"
+)
 
-local speedSlider, speedSliderGetter
-local speedToggle = CreateToggle("Speed", "Tăng tốc độ di chuyển", function(state)
-	Speed_State = state
-	speedSlider.Visible = state
-end)
-speedSlider, speedSliderGetter = CreateSlider("Speed Value", 16, 300, 100)
+-- SPEED
+local speedSlider
+
+CreateToggle(
+	"Speed",
+	"Tăng tốc độ di chuyển",
+	function(state)
+		speedSlider.Visible = state
+	end
+)
+
+speedSlider = CreateSlider(
+	"Speed Value",
+	16,
+	300,
+	100
+)
+
 speedSlider.Visible = false
 
-local jumpSlider, jumpSliderGetter
-local jumpToggle = CreateToggle("Jump Boost", "Tăng lực nhảy", function(state)
-	JumpBoost_State = state
-	jumpSlider.Visible = state
-end)
-jumpSlider, jumpSliderGetter = CreateSlider("Jump Power", 50, 300, 100)
+-- JUMP BOOST
+local jumpSlider
+
+CreateToggle(
+	"Jump Boost",
+	"Tăng lực nhảy",
+	function(state)
+		jumpSlider.Visible = state
+	end
+)
+
+jumpSlider = CreateSlider(
+	"Jump Power",
+	50,
+	300,
+	100
+)
+
 jumpSlider.Visible = false
 
-local hitboxSlider, hitboxColorPicker, hitboxSliderGetter, hitboxColorGetter
-local hitboxToggle = CreateToggle("Hitbox Player", "Đổi size & màu TẤT CẢ người chơi", function(state)
-	Hitbox_State = state
-	hitboxSlider.Visible = state
-	hitboxColorPicker.Visible = state
-end)
-hitboxSlider, hitboxSliderGetter = CreateSlider("Size Hitbox", 1, 50, 20)
-hitboxColorPicker, hitboxColorGetter = CreateColorPicker("Màu Hitbox")
+-- HITBOX
+local hitboxSlider
+local hitboxColorPicker
+
+CreateToggle(
+	"Hitbox Player",
+	"Tăng hitbox người chơi",
+	function(state)
+
+		hitboxSlider.Visible = state
+		hitboxColorPicker.Visible = state
+
+	end
+)
+
+hitboxSlider = CreateSlider(
+	"Size Hitbox",
+	1,
+	50,
+	20
+)
+
+hitboxColorPicker = CreateColorPicker(
+	"Màu Hitbox"
+)
+
 hitboxSlider.Visible = false
 hitboxColorPicker.Visible = false
--- ==========================================================
--- PHẦN 6: LOGIC CHÍNH (SPEED, JUMP, NOCLIP, FIX LAG, HITBOX)
--- ==========================================================
-local defaultWalkSpeed = 16
-local defaultJumpPower = 50
+--========================================================
+-- PART 5/7 - FEATURE STATES + ESP
+--========================================================
 
--- Logic Infinite Jump
-UserInputService.JumpRequest:Connect(function()
-	if InfJump_State and LocalPlayer.Character then
-		local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if hum then
-			hum:ChangeState(Enum.HumanoidStateType.Jumping)
-		end
-	end
-end)
+local States = {
+	ESPPlayer = false,
+	ESPMob = false,
+	Fullbright = false,
+	FixLag = false,
+	Noclip = false,
+	InfJump = false,
+	Speed = false,
+	JumpBoost = false,
+	Hitbox = false
+}
 
--- Vòng lặp chính xử lý liên tục các tính năng
-RunService.Heartbeat:Connect(function()
-	local char = LocalPlayer.Character
-	if not char then return end
+local character
+local humanoid
+local rootPart
 
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not hum or not root then return end
+local function UpdateCharacter()
 
-	-- FIX LAG THẬT SỰ (Tắt bóng, tắt viền, chỉnh màu đen)
-	if FixLag_State then
-		Lighting.GlobalShadows = false
-		Lighting.Outlines = false
-		
-		if FixLag_Mode == "Light" then
-			Lighting.ShadowSoftness = 0
-			Lighting.EnvironmentDiffuseScale = 0
-			Lighting.EnvironmentSpecularScale = 0
-		elseif FixLag_Mode == "Strong" then
-			Lighting.ShadowSoftness = 0
-			Lighting.EnvironmentDiffuseScale = 0
-			Lighting.EnvironmentSpecularScale = 0
-			Lighting.ClockTime = 12
-			Lighting.Brightness = 1
-			workspace.DescendantAdded:Connect(function(desc)
-				if desc:IsA("BasePart") then
-					desc.Material = Enum.Material.SmoothPlastic
-				end
-			end)
-		end
-	else
-		-- Reset lại mặc định khi tắt
-		Lighting.GlobalShadows = true
-		Lighting.Outlines = true
-		Lighting.ShadowSoftness = 1
-		Lighting.EnvironmentDiffuseScale = 1
-		Lighting.EnvironmentSpecularScale = 1
-	end
+	character = LocalPlayer.Character
 
-	-- Fullbright
-	if Fullbright_State then
-		Lighting.Brightness = 3
-		Lighting.ClockTime = 12
-		Lighting.Outlines = false
-	else
-		Lighting.Brightness = 1
-		Lighting.ClockTime = 14
-	end
-
-	-- Speed & Jump Boost (Tự động Reset về mặc định khi tắt)
-	Speed_Value = speedSliderGetter()
-	JumpBoost_Value = jumpSliderGetter()
-
-	if Speed_State then
-		hum.WalkSpeed = Speed_Value
-	else
-		hum.WalkSpeed = defaultWalkSpeed
-	end
-
-	if JumpBoost_State then
-		hum.JumpPower = JumpBoost_Value
-	else
-		hum.JumpPower = defaultJumpPower
-	end
-
-	-- NOCLIP (Dùng lệnh Executor nếu có để chắc chắn xuyên tường)
-	if Noclip_State then
-		-- Thử dùng lệnh chuẩn của Executor
-		if sethiddenproperty then
-			sethiddenproperty(root, "CanCollide", false)
-		else
-			root.CanCollide = false
-		end
-		-- Xử lý riêng cho các khớp
-		for _, part in ipairs(char:GetChildren()) do
-			if part:IsA("BasePart") then
-				if sethiddenproperty then
-					sethiddenproperty(part, "CanCollide", false)
-				else
-					part.CanCollide = false
-				end
-			end
-		end
-	else
-		-- Reset lại khi tắt
-		if sethiddenproperty then
-			sethiddenproperty(root, "CanCollide", true)
-		else
-			root.CanCollide = true
-		end
-		for _, part in ipairs(char:GetChildren()) do
-			if part:IsA("BasePart") then
-				if sethiddenproperty then
-					sethiddenproperty(part, "CanCollide", true)
-				else
-					part.CanCollide = true
-				end
-			end
-		end
-	end
-
-	-- HITBOX: Thay đổi kích thước và màu của TẤT CẢ NGƯỜI CHƠI TRONG SERVER
-	if Hitbox_State then
-		Hitbox_Value = hitboxSliderGetter()
-		Hitbox_Color = hitboxColorGetter()
-		
-		local scale = Hitbox_Value / 10 -- Chỉnh tỷ lệ to lên
-
-		for _, plr in ipairs(Players:GetPlayers()) do
-			local char2 = plr.Character
-			if char2 then
-				local root2 = char2:FindFirstChild("HumanoidRootPart")
-				if root2 then
-					-- Đổi size to
-					root2.Size = Vector3.new(2 + scale, 2 + scale, 1 + scale)
-					
-					-- Đổi màu
-					if Hitbox_Color == "Rainbow" then
-						root2.Color = Color3.fromHSV(tick() % 1, 1, 1)
-					else
-						root2.Color = Hitbox_Color
-					end
-				end
-			end
-		end
-	else
-		-- Reset về mặc định khi tắt
-		for _, plr in ipairs(Players:GetPlayers()) do
-			local char2 = plr.Character
-			if char2 then
-				local root2 = char2:FindFirstChild("HumanoidRootPart")
-				if root2 then
-					root2.Size = Vector3.new(2, 2, 1)
-					root2.Color = Color3.fromRGB(255, 255, 255)
-				end
-			end
-		end
-	end
-end)
--- ==========================================================
--- PHẦN 7: LOGIC ESP - HIỆN TẤT CẢ NGƯỜI CHƠI & QUÁI VẬT
--- ==========================================================
-RunService.RenderStepped:Connect(function()
-	-- Lấy màu đang chọn từ menu
-	ESP_Color = espColorGetter()
-
-	-- Xóa toàn bộ Drawing cũ nếu tắt ESP hoặc Mob
-	if not ESP_State and not ESPMob_State then
-		for _, d in ipairs(getgc(true)) do
-			if typeof(d) == "Drawing" then d:Remove() end
-		end
+	if not character then
 		return
 	end
 
-	-- Vẽ ESP cho Người Chơi
-	if ESP_State then
-		for _, plr in ipairs(Players:GetPlayers()) do
-			if plr ~= LocalPlayer and plr.Character then
-				local hrp = plr.Character:FindFirstChild("HumanoidRootPart")
-				if hrp and hrp:IsA("BasePart") then
-					local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-					if onScreen then
-						local box = Drawing.new("Box")
-						box.Size = Vector2.new(60, 90)
-						box.Position = Vector2.new(pos.X - 30, pos.Y - 60)
-						box.Color = ESP_Color
-						box.Thickness = 2
-						box.Visible = true
-					end
-				end
+	humanoid =
+		character:FindFirstChildOfClass("Humanoid")
+
+	rootPart =
+		character:FindFirstChild("HumanoidRootPart")
+end
+
+UpdateCharacter()
+
+--========================================================
+-- ESP PLAYER
+--========================================================
+
+local espFolder = Instance.new("Folder")
+espFolder.Name = "QAHubESP"
+espFolder.Parent = screenGui
+
+local function RemovePlayerESP(player)
+
+	local object =
+		espFolder:FindFirstChild(
+			tostring(player.UserId)
+		)
+
+	if object then
+		object:Destroy()
+	end
+end
+
+local function GetESPColor()
+
+	if ColorObjects["Màu ESP Player"] then
+
+		if ColorObjects["Màu ESP Player"].Rainbow then
+			return Color3.fromHSV(
+				rainbowOffset,
+				0.85,
+				1
+			)
+		end
+
+		return ColorObjects["Màu ESP Player"].Color
+	end
+
+	return Color3.fromRGB(170, 0, 255)
+end
+
+local function CreatePlayerESP(player)
+
+	if player == LocalPlayer then
+		return
+	end
+
+	if not player.Character then
+		return
+	end
+
+	RemovePlayerESP(player)
+
+	local highlight = Instance.new("Highlight")
+
+	highlight.Name =
+		tostring(player.UserId)
+
+	highlight.Adornee =
+		player.Character
+
+	highlight.DepthMode =
+		Enum.HighlightDepthMode.AlwaysOnTop
+
+	highlight.FillTransparency = 0.65
+	highlight.OutlineTransparency = 0
+
+	highlight.FillColor =
+		GetESPColor()
+
+	highlight.OutlineColor =
+		Color3.fromRGB(255, 255, 255)
+
+	highlight.Parent = espFolder
+end
+
+local function SetESP(state)
+
+	States.ESPPlayer = state
+
+	if not state then
+
+		for _, obj in ipairs(
+			espFolder:GetChildren()
+		) do
+			obj:Destroy()
+		end
+
+		return
+	end
+
+	for _, player in ipairs(
+		Players:GetPlayers()
+	) do
+
+		if player ~= LocalPlayer then
+			CreatePlayerESP(player)
+		end
+
+	end
+end
+
+Players.PlayerAdded:Connect(function(player)
+
+	player.CharacterAdded:Connect(function()
+
+		task.wait(0.3)
+
+		if States.ESPPlayer then
+			CreatePlayerESP(player)
+		end
+
+	end)
+
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	RemovePlayerESP(player)
+end)
+
+-- cập nhật màu ESP
+RunService.RenderStepped:Connect(function()
+
+	if not States.ESPPlayer then
+		return
+	end
+
+	for _, player in ipairs(
+		Players:GetPlayers()
+	) do
+
+		if player ~= LocalPlayer
+			and player.Character then
+
+			local highlight =
+				espFolder:FindFirstChild(
+					tostring(player.UserId)
+				)
+
+			if highlight then
+				highlight.FillColor =
+					GetESPColor()
 			end
+
 		end
 	end
 
-	-- Vẽ ESP cho Quái Vật (Mob)
-	if ESPMob_State then
-		for _, obj in ipairs(workspace:GetDescendants()) do
-			if obj:IsA("Humanoid") and obj.Parent and obj.Parent:FindFirstChild("HumanoidRootPart") and not Players:GetPlayerFromCharacter(obj.Parent) then
-				local hrp = obj.Parent:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-					if onScreen then
-						local box = Drawing.new("Box")
-						box.Size = Vector2.new(40, 60)
-						box.Position = Vector2.new(pos.X - 20, pos.Y - 40)
-						box.Color = Color3.fromRGB(255, 100, 0) -- Màu cam cho quái
-						box.Thickness = 2
-						box.Visible = true
-					end
+end)
+
+--========================================================
+-- ESP MOB
+--========================================================
+
+local mobFolder = Instance.new("Folder")
+mobFolder.Name = "QAHubMobESP"
+mobFolder.Parent = screenGui
+
+local function ClearMobESP()
+
+	for _, obj in ipairs(
+		mobFolder:GetChildren()
+	) do
+		obj:Destroy()
+	end
+
+end
+
+local function ScanMobs()
+
+	if not States.ESPMob then
+		return
+	end
+
+	ClearMobESP()
+
+	for _, obj in ipairs(
+		workspace:GetDescendants()
+	) do
+
+		if obj:IsA("Model")
+			and obj ~= character then
+
+			local hum =
+				obj:FindFirstChildOfClass(
+					"Humanoid"
+				)
+
+			if hum then
+
+				local player =
+					Players:GetPlayerFromCharacter(
+						obj
+					)
+
+				if not player then
+
+					local highlight =
+						Instance.new("Highlight")
+
+					highlight.Adornee = obj
+					highlight.DepthMode =
+						Enum.HighlightDepthMode.AlwaysOnTop
+
+					highlight.FillTransparency = 0.75
+					highlight.OutlineTransparency = 0
+
+					highlight.FillColor =
+						Color3.fromRGB(255, 80, 80)
+
+					highlight.OutlineColor =
+						Color3.fromRGB(255, 255, 255)
+
+					highlight.Parent =
+						mobFolder
 				end
 			end
 		end
 	end
+end
+
+local function SetESPMob(state)
+
+	States.ESPMob = state
+
+	if state then
+		ScanMobs()
+	else
+		ClearMobESP()
+	end
+
+end
+
+task.spawn(function()
+
+	while task.wait(2) do
+
+		if States.ESPMob then
+			ScanMobs()
+		end
+
+	end
+
 end)
+--========================================================
+-- PART 6/7 - FULLBRIGHT / NOCLIP / INFJUMP / SPEED
+--========================================================
+
+--========================================================
+-- FULLBRIGHT
+--========================================================
+
+local OriginalLighting = {
+	Brightness = Lighting.Brightness,
+	ClockTime = Lighting.ClockTime,
+	FogEnd = Lighting.FogEnd,
+	GlobalShadows = Lighting.GlobalShadows,
+	Ambient = Lighting.Ambient,
+	OutdoorAmbient = Lighting.OutdoorAmbient
+}
+
+local function SetFullbright(state)
+
+	States.Fullbright = state
+
+	if state then
+
+		Lighting.Brightness = 3
+		Lighting.ClockTime = 14
+		Lighting.FogEnd = 100000
+		Lighting.GlobalShadows = false
+
+		Lighting.Ambient =
+			Color3.fromRGB(255, 255, 255)
+
+		Lighting.OutdoorAmbient =
+			Color3.fromRGB(255, 255, 255)
+
+	else
+
+		Lighting.Brightness =
+			OriginalLighting.Brightness
+
+		Lighting.ClockTime =
+			OriginalLighting.ClockTime
+
+		Lighting.FogEnd =
+			OriginalLighting.FogEnd
+
+		Lighting.GlobalShadows =
+			OriginalLighting.GlobalShadows
+
+		Lighting.Ambient =
+			OriginalLighting.Ambient
+
+		Lighting.OutdoorAmbient =
+			OriginalLighting.OutdoorAmbient
+
+	end
+end
+
+--========================================================
+-- NOCLIP
+--========================================================
+
+local function SetNoclip(state)
+
+	States.Noclip = state
+
+end
+
+RunService.Stepped:Connect(function()
+
+	if not States.Noclip then
+		return
+	end
+
+	if not character then
+		return
+	end
+
+	for _, part in ipairs(
+		character:GetDescendants()
+	) do
+
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+		end
+
+	end
+
+end)
+
+--========================================================
+-- INF JUMP
+--========================================================
+
+local infJumpConnection
+
+local function SetInfJump(state)
+
+	States.InfJump = state
+
+	if infJumpConnection then
+
+		infJumpConnection:Disconnect()
+		infJumpConnection = nil
+
+	end
+
+	if state then
+
+		infJumpConnection =
+			UserInputService.JumpRequest:Connect(
+				function()
+
+					if humanoid
+						and humanoid.Health > 0 then
+
+						humanoid:
+							ChangeState(
+								Enum.HumanoidStateType.Jumping
+							)
+
+					end
+
+				end
+			)
+
+	end
+
+end
+
+--========================================================
+-- SPEED
+--========================================================
+
+local function GetSpeed()
+
+	if SliderObjects["Speed Value"] then
+
+		return SliderObjects[
+			"Speed Value"
+		].Get()
+
+	end
+
+	return 100
+end
+
+local function SetSpeed(state)
+
+	States.Speed = state
+
+	if not humanoid then
+		return
+	end
+
+	if state then
+
+		humanoid.WalkSpeed =
+			GetSpeed()
+
+	else
+
+		humanoid.WalkSpeed = 16
+
+	end
+
+end
+
+RunService.RenderStepped:Connect(function()
+
+	if States.Speed
+		and humanoid
+		and humanoid.Health > 0 then
+
+		humanoid.WalkSpeed =
+			GetSpeed()
+
+	end
+
+end)
+
+--========================================================
+-- JUMP BOOST
+--========================================================
+
+local function GetJumpPower()
+
+	if SliderObjects["Jump Power"] then
+
+		return SliderObjects[
+			"Jump Power"
+		].Get()
+
+	end
+
+	return 100
+end
+
+local function SetJumpBoost(state)
+
+	States.JumpBoost = state
+
+	if not humanoid then
+		return
+	end
+
+	humanoid.UseJumpPower = true
+
+	if state then
+
+		humanoid.JumpPower =
+			GetJumpPower()
+
+	else
+
+		humanoid.JumpPower = 50
+
+	end
+
+end
+
+RunService.RenderStepped:Connect(function()
+
+	if States.JumpBoost
+		and humanoid
+		and humanoid.Health > 0 then
+
+		humanoid.UseJumpPower = true
+
+		humanoid.JumpPower =
+			GetJumpPower()
+
+	end
+
+end)
+
+--========================================================
+-- RESPAWN
+--========================================================
+
+LocalPlayer.CharacterAdded:Connect(function(newCharacter)
+
+	character = newCharacter
+
+	task.wait(0.5)
+
+	humanoid =
+		character:FindFirstChildOfClass(
+			"Humanoid"
+		)
+
+	rootPart =
+		character:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if States.Speed then
+		SetSpeed(true)
+	end
+
+	if States.JumpBoost then
+		SetJumpBoost(true)
+	end
+
+	if States.Noclip then
+
+		for _, part in ipairs(
+			character:GetDescendants()
+		) do
+
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+
+		end
+
+	end
+
+end)
+--========================================================
+-- PART 7/7 - FIX LAG + HITBOX + KẾT NỐI TOGGLE
+--========================================================
+
+--========================================================
+-- FIX LAG
+--========================================================
+
+local SavedEffects = {}
+
+local function SetFixLag(state)
+
+	States.FixLag = state
+
+	if state then
+
+		SavedEffects = {}
+
+		for _, obj in ipairs(
+			workspace:GetDescendants()
+		) do
+
+			if obj:IsA("ParticleEmitter")
+				or obj:IsA("Trail")
+				or obj:IsA("Beam")
+				or obj:IsA("Smoke")
+				or obj:IsA("Fire") then
+
+				SavedEffects[obj] =
+					obj.Enabled
+
+				obj.Enabled = false
+			end
+
+		end
+
+		if FixLagMode == "Mạnh" then
+
+			for _, obj in ipairs(
+				workspace:GetDescendants()
+			) do
+
+				if obj:IsA("BasePart") then
+
+					obj.Material =
+						Enum.Material.SmoothPlastic
+
+				end
+
+			end
+
+		end
+
+	else
+
+		for obj, oldValue in pairs(
+			SavedEffects
+		) do
+
+			if obj
+				and obj.Parent then
+
+				obj.Enabled =
+					oldValue
+
+			end
+
+		end
+
+		SavedEffects = {}
+
+	end
+
+end
+
+--========================================================
+-- HITBOX
+--========================================================
+
+local OriginalHitboxes = {}
+
+local function GetHitboxSize()
+
+	if SliderObjects["Size Hitbox"] then
+		return SliderObjects[
+			"Size Hitbox"
+		].Get()
+	end
+
+	return 20
+end
+
+local function GetHitboxColor()
+
+	if ColorObjects["Màu Hitbox"] then
+
+		if ColorObjects[
+			"Màu Hitbox"
+		].Rainbow then
+
+			return Color3.fromHSV(
+				rainbowOffset,
+				0.85,
+				1
+			)
+
+		end
+
+		return ColorObjects[
+			"Màu Hitbox"
+		].Color
+
+	end
+
+	return Color3.fromRGB(170, 0, 255)
+end
+
+local function RestoreHitbox(player)
+
+	local characterModel =
+		player.Character
+
+	if not characterModel then
+		return
+	end
+
+	local data =
+		OriginalHitboxes[player]
+
+	if not data then
+		return
+	end
+
+	for part, info in pairs(data) do
+
+		if part
+			and part.Parent
+			and part:IsA("BasePart") then
+
+			part.Size = info.Size
+			part.Transparency =
+				info.Transparency
+
+			part.CanCollide =
+				info.CanCollide
+
+		end
+
+	end
+
+	OriginalHitboxes[player] = nil
+end
+
+local function ApplyHitbox(player)
+
+	if player == LocalPlayer then
+		return
+	end
+
+	local model =
+		player.Character
+
+	if not model then
+		return
+	end
+
+	local root =
+		model:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	if not root then
+		return
+	end
+
+	if not OriginalHitboxes[player] then
+
+		OriginalHitboxes[player] = {}
+
+		for _, part in ipairs(
+			model:GetChildren()
+		) do
+
+			if part:IsA("BasePart") then
+
+				OriginalHitboxes[player][part] = {
+					Size = part.Size,
+					Transparency =
+						part.Transparency,
+					CanCollide =
+						part.CanCollide
+				}
+
+			end
+
+		end
+
+	end
+
+	local size =
+		GetHitboxSize()
+
+	local scale =
+		math.max(
+			1,
+			size / 10
+		)
+
+	root.Size =
+		Vector3.new(
+			2 * scale,
+			2 * scale,
+			2 * scale
+		)
+
+	root.Transparency = 0.5
+
+	root.CanCollide = false
+end
+
+local function SetHitbox(state)
+
+	States.Hitbox = state
+
+	if state then
+
+		for _, player in ipairs(
+			Players:GetPlayers()
+		) do
+
+			if player ~= LocalPlayer then
+				ApplyHitbox(player)
+			end
+
+		end
+
+	else
+
+		for player in pairs(
+			OriginalHitboxes
+		) do
+
+			RestoreHitbox(player)
+
+		end
+
+	end
+
+end
+
+Players.PlayerAdded:Connect(function(player)
+
+	player.CharacterAdded:Connect(function()
+
+		task.wait(0.5)
+
+		if States.Hitbox then
+			ApplyHitbox(player)
+		end
+
+	end)
+
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+
+	OriginalHitboxes[player] = nil
+
+end)
+
+-- cập nhật hitbox + màu theo slider
+RunService.RenderStepped:Connect(function()
+
+	if not States.Hitbox then
+		return
+	end
+
+	for _, player in ipairs(
+		Players:GetPlayers()
+	) do
+
+		if player ~= LocalPlayer then
+			ApplyHitbox(player)
+		end
+
+	end
+
+end)
+
+--========================================================
+-- KẾT NỐI TOÀN BỘ TOGGLE
+--========================================================
+
+ToggleObjects["ESP Player"].Set(false)
+
+ToggleObjects["ESP Mob"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.ESPMob
+
+		SetESPMob(state)
+
+	end
+)
+
+ToggleObjects["Fullbright"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.Fullbright
+
+		SetFullbright(state)
+
+	end
+)
+
+ToggleObjects["Fix Lag"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.FixLag
+
+		SetFixLag(state)
+
+	end
+)
+
+ToggleObjects["Noclip"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.Noclip
+
+		SetNoclip(state)
+
+	end
+)
+
+ToggleObjects["infjump"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.InfJump
+
+		SetInfJump(state)
+
+	end
+)
+
+ToggleObjects["Speed"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.Speed
+
+		SetSpeed(state)
+
+	end
+)
+
+ToggleObjects["Jump Boost"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.JumpBoost
+
+		SetJumpBoost(state)
+
+	end
+)
+
+ToggleObjects["Hitbox Player"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.Hitbox
+
+		SetHitbox(state)
+
+	end
+)
+
+-- ESP Player cần đồng bộ với nút hiện có
+ToggleObjects["ESP Player"].Button.MouseButton1Click:Connect(
+	function()
+
+		local state =
+			not States.ESPPlayer
+
+		SetESP(state)
+
+	end
+)
+
+--========================================================
+-- CẬP NHẬT CẦU VỒNG CHO HITBOX
+--========================================================
+
+RunService.RenderStepped:Connect(function()
+
+	if not States.Hitbox then
+		return
+	end
+
+	local color =
+		GetHitboxColor()
+
+	for _, player in ipairs(
+		Players:GetPlayers()
+	) do
+
+		if player ~= LocalPlayer
+			and player.Character then
+
+			local root =
+				player.Character:
+					FindFirstChild(
+						"HumanoidRootPart"
+					)
+
+			if root then
+
+				-- SelectionBox giúp nhìn hitbox rõ hơn
+				local box =
+					root:FindFirstChild(
+						"QAHitboxVisual"
+					)
+
+				if not box then
+
+					box =
+						Instance.new(
+							"SelectionBox"
+						)
+
+					box.Name =
+						"QAHitboxVisual"
+
+					box.Adornee = root
+
+					box.LineThickness = 0.03
+
+					box.SurfaceTransparency =
+						0.85
+
+					box.Parent = root
+
+				end
+
+				box.Color3 = color
+
+			end
+
+		end
+
+	end
+
+end)
+
+--========================================================
+-- XÓA VISUAL HITBOX KHI TẮT
+--========================================================
+
+local oldSetHitbox = SetHitbox
+
+SetHitbox = function(state)
+
+	oldSetHitbox(state)
+
+	if not state then
+
+		for _, player in ipairs(
+			Players:GetPlayers()
+		) do
+
+			if player.Character then
+
+				local root =
+					player.Character:
+						FindFirstChild(
+							"HumanoidRootPart"
+						)
+
+				if root then
+
+					local box =
+						root:FindFirstChild(
+							"QAHitboxVisual"
+						)
+
+					if box then
+						box:Destroy()
+					end
+
+				end
+
+			end
+
+		end
+
+	end
+
+end
+
+print("======================================")
+print("       👑 QUOC ANH HUB")
+print("       🌈 RAINBOW ENABLED")
+print("       ✅ ALL FEATURES LOADED")
+print("======================================")
