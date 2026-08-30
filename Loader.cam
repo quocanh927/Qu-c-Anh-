@@ -1,152 +1,102 @@
--- ServerScriptService/QAHubServer
-
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local remote = ReplicatedStorage:FindFirstChild("QAHubRemote")
-
-if not remote then
-	remote = Instance.new("RemoteEvent")
-	remote.Name = "QAHubRemote"
-	remote.Parent = ReplicatedStorage
-end
-
-local originalSizes = {}
-
-local function getRoot(character)
-	return character and character:FindFirstChild("HumanoidRootPart")
-end
-
-local function setPlayerHitbox(player, size)
-	local character = player.Character
-	local root = getRoot(character)
-
-	if not root then
-		return
-	end
-
-	if not originalSizes[player] then
-		originalSizes[player] = root.Size
-	end
-
-	root.Size = Vector3.new(size, size, size)
-	root.CanCollide = false
-	root.Massless = true
-end
-
-local function resetPlayerHitbox(player)
-	local character = player.Character
-	local root = getRoot(character)
-
-	if root and originalSizes[player] then
-		root.Size = originalSizes[player]
-	end
-end
-
-remote.OnServerEvent:Connect(function(sender, action, value)
-
-	-- Chỉ game owner/admin mới được điều khiển
-	if sender.UserId ~= game.CreatorId then
-		return
-	end
-
-	if action == "Hitbox" then
-
-		local enabled = value.enabled
-		local size = math.clamp(tonumber(value.size) or 50, 1, 100)
-
-		for _, player in ipairs(Players:GetPlayers()) do
-			if player ~= sender then
-				if enabled then
-					setPlayerHitbox(player, size)
-				else
-					resetPlayerHitbox(player)
-				end
-			end
-		end
-
-	elseif action == "ResetHitbox" then
-
-		for _, player in ipairs(Players:GetPlayers()) do
-			resetPlayerHitbox(player)
-		end
-	end
-end)
-
-Players.PlayerAdded:Connect(function(player)
-
-	player.CharacterAdded:Connect(function()
-		task.wait(0.5)
-		originalSizes[player] = nil
-	end)
-
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-	originalSizes[player] = nil
-end)
--- LocalScript: QA Hub
--- PHẦN 2/7
+--==================================================
+-- QA HUB - PART 1/7
+-- CORE + MENU
+--==================================================
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local Remote = ReplicatedStorage:WaitForChild("QAHubRemote")
 
-if PlayerGui:FindFirstChild("QAHubGui") then
-	PlayerGui.QAHubGui:Destroy()
+local oldGui = PlayerGui:FindFirstChild("QAHubGui")
+if oldGui then
+	oldGui:Destroy()
 end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "QAHubGui"
 screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
 screenGui.Parent = PlayerGui
+
+local States = {
+	ESPPlayer = false,
+	ESPMob = false,
+	Fullbright = false,
+	FixLag = false,
+	Noclip = false,
+	InfJump = false,
+	Speed = false,
+	JumpBoost = false,
+	Hitbox = false
+}
+
+local Values = {
+	Speed = 100,
+	JumpPower = 100,
+	HitboxSize = 20
+}
+
+local Colors = {
+	ESPPlayer = Color3.fromRGB(0,255,0),
+	ESPMob = Color3.fromRGB(255,80,80),
+	Hitbox = Color3.fromRGB(0,170,255)
+}
+
+local Rainbow = {
+	ESPPlayer = false,
+	ESPMob = false,
+	Hitbox = false
+}
+
+local rainbowOffset = 0
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Name = "QAToggle"
+toggleBtn.Size = UDim2.new(0,45,0,45)
+toggleBtn.Position = UDim2.new(0,15,0.4,0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(15,15,20)
+toggleBtn.Text = "QA"
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.TextSize = 18
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.Active = true
+toggleBtn.Draggable = true
+toggleBtn.Parent = screenGui
+
+local bc = Instance.new("UICorner")
+bc.CornerRadius = UDim.new(1,0)
+bc.Parent = toggleBtn
+
+local bs = Instance.new("UIStroke")
+bs.Thickness = 2.5
+bs.Parent = toggleBtn
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Name = "QAHubMain"
 mainFrame.Size = UDim2.new(0,270,0,340)
-mainFrame.Position = UDim2.new(.5,-135,.5,-170)
+mainFrame.Position = UDim2.new(0.5,-135,0.5,-170)
 mainFrame.BackgroundColor3 = Color3.fromRGB(12,12,18)
 mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
 mainFrame.Active = true
 mainFrame.Draggable = true
+mainFrame.Visible = true
 mainFrame.Parent = screenGui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,14)
-corner.Parent = mainFrame
+local mc = Instance.new("UICorner")
+mc.CornerRadius = UDim.new(0,14)
+mc.Parent = mainFrame
 
-local stroke = Instance.new("UIStroke")
-stroke.Thickness = 2.5
-stroke.Parent = mainFrame
+local ms = Instance.new("UIStroke")
+ms.Thickness = 2.5
+ms.Parent = mainFrame
 
-local toggle = Instance.new("TextButton")
-toggle.Size = UDim2.new(0,45,0,45)
-toggle.Position = UDim2.new(0,15,.4,0)
-toggle.Text = "QA"
-toggle.TextSize = 18
-toggle.Font = Enum.Font.GothamBold
-toggle.TextColor3 = Color3.new(1,1,1)
-toggle.BackgroundColor3 = Color3.fromRGB(15,15,20)
-toggle.Active = true
-toggle.Draggable = true
-toggle.Parent = screenGui
-
-local tc = Instance.new("UICorner")
-tc.CornerRadius = UDim.new(1,0)
-tc.Parent = toggle
-
-local ts = Instance.new("UIStroke")
-ts.Thickness = 2.5
-ts.Parent = toggle
-
-toggle.MouseButton1Click:Connect(function()
+toggleBtn.MouseButton1Click:Connect(function()
 	mainFrame.Visible = not mainFrame.Visible
 end)
 
@@ -155,38 +105,35 @@ title.Size = UDim2.new(1,-45,0,35)
 title.Position = UDim2.new(0,12,0,5)
 title.BackgroundTransparency = 1
 title.Text = "👑 QUOC ANH HUB"
+title.TextColor3 = Color3.new(1,1,1)
 title.TextSize = 15
 title.Font = Enum.Font.GothamBold
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextColor3 = Color3.new(1,1,1)
 title.Parent = mainFrame
 
 local titleGradient = Instance.new("UIGradient")
 titleGradient.Parent = title
 
-local rainbow = ColorSequence.new({
-	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
-	ColorSequenceKeypoint.new(.2,Color3.fromRGB(255,255,0)),
-	ColorSequenceKeypoint.new(.4,Color3.fromRGB(0,255,0)),
-	ColorSequenceKeypoint.new(.6,Color3.fromRGB(0,255,255)),
-	ColorSequenceKeypoint.new(.8,Color3.fromRGB(170,0,255)),
-	ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,200))
-})
+local close = Instance.new("TextButton")
+close.Size = UDim2.new(0,24,0,24)
+close.Position = UDim2.new(1,-32,0,8)
+close.BackgroundColor3 = Color3.fromRGB(30,30,45)
+close.Text = "✕"
+close.TextColor3 = Color3.fromRGB(255,200,0)
+close.TextSize = 12
+close.Font = Enum.Font.GothamBold
+close.Parent = mainFrame
 
-titleGradient.Color = rainbow
+local cc = Instance.new("UICorner")
+cc.CornerRadius = UDim.new(0,6)
+cc.Parent = close
 
-local hue = 0
-
-RunService.RenderStepped:Connect(function(dt)
-	hue = (hue + dt * .8) % 1
-
-	local c = Color3.fromHSV(hue,.85,1)
-
-	stroke.Color = c
-	ts.Color = c
-	titleGradient.Offset = Vector2.new(hue,0)
+close.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
 end)
--- PHẦN 3/7
+--==================================================
+-- PROFILE + RAINBOW
+--==================================================
 
 local profile = Instance.new("Frame")
 profile.Size = UDim2.new(1,-20,0,50)
@@ -198,26 +145,81 @@ local pc = Instance.new("UICorner")
 pc.CornerRadius = UDim.new(0,8)
 pc.Parent = profile
 
-local info = Instance.new("TextLabel")
-info.Size = UDim2.new(1,-16,0,18)
-info.Position = UDim2.new(0,8,0,7)
-info.BackgroundTransparency = 1
-info.Text = LocalPlayer.Name
-info.TextColor3 = Color3.new(1,1,1)
-info.TextSize = 12
-info.Font = Enum.Font.GothamBold
-info.TextXAlignment = Enum.TextXAlignment.Left
-info.Parent = profile
+local logo = Instance.new("Frame")
+logo.Size = UDim2.new(0,36,0,36)
+logo.Position = UDim2.new(0,7,0,7)
+logo.BackgroundColor3 = Color3.fromRGB(10,10,15)
+logo.Parent = profile
 
-local device = Instance.new("TextLabel")
-device.Size = UDim2.new(1,-16,0,16)
-device.Position = UDim2.new(0,8,0,26)
-device.BackgroundTransparency = 1
-device.Text = "📱 Thiết bị: Android / PC"
-device.TextColor3 = Color3.fromRGB(0,230,120)
-device.TextSize = 10
-device.TextXAlignment = Enum.TextXAlignment.Left
-device.Parent = profile
+local lc = Instance.new("UICorner")
+lc.CornerRadius = UDim.new(1,0)
+lc.Parent = logo
+
+local ls = Instance.new("UIStroke")
+ls.Thickness = 2
+ls.Parent = logo
+
+local logoText = Instance.new("TextLabel")
+logoText.Size = UDim2.new(1,0,1,0)
+logoText.BackgroundTransparency = 1
+logoText.Text = "QA"
+logoText.TextColor3 = Color3.new(1,1,1)
+logoText.TextSize = 15
+logoText.Font = Enum.Font.GothamBold
+logoText.Parent = logo
+
+local logoGradient = Instance.new("UIGradient")
+logoGradient.Parent = logoText
+
+local userText = Instance.new("TextLabel")
+userText.Size = UDim2.new(1,-55,0,16)
+userText.Position = UDim2.new(0,50,0,8)
+userText.BackgroundTransparency = 1
+userText.Text = LocalPlayer.Name
+userText.TextColor3 = Color3.new(1,1,1)
+userText.TextSize = 12
+userText.Font = Enum.Font.GothamBold
+userText.TextXAlignment = Enum.TextXAlignment.Left
+userText.Parent = profile
+
+local deviceText = Instance.new("TextLabel")
+deviceText.Size = UDim2.new(1,-55,0,14)
+deviceText.Position = UDim2.new(0,50,0,24)
+deviceText.BackgroundTransparency = 1
+deviceText.Text = "📱 Thiết bị: Android / PC"
+deviceText.TextColor3 = Color3.fromRGB(0,230,120)
+deviceText.TextSize = 10
+deviceText.Font = Enum.Font.Gotham
+deviceText.TextXAlignment = Enum.TextXAlignment.Left
+deviceText.Parent = profile
+
+local rainbowSequence = ColorSequence.new({
+	ColorSequenceKeypoint.new(0,Color3.fromRGB(255,0,0)),
+	ColorSequenceKeypoint.new(.2,Color3.fromRGB(255,255,0)),
+	ColorSequenceKeypoint.new(.4,Color3.fromRGB(0,255,0)),
+	ColorSequenceKeypoint.new(.6,Color3.fromRGB(0,255,255)),
+	ColorSequenceKeypoint.new(.8,Color3.fromRGB(170,0,255)),
+	ColorSequenceKeypoint.new(1,Color3.fromRGB(255,0,200))
+})
+
+titleGradient.Color = rainbowSequence
+logoGradient.Color = rainbowSequence
+
+RunService.RenderStepped:Connect(function(dt)
+	rainbowOffset = (rainbowOffset + dt * .35) % 1
+
+	local c = Color3.fromHSV(rainbowOffset,.85,1)
+
+	ms.Color = c
+	bs.Color = c
+	ls.Color = c
+
+	titleGradient.Offset = Vector2.new(rainbowOffset,0)
+	logoGradient.Offset = Vector2.new(rainbowOffset,0)
+end)
+--==================================================
+-- SCROLL + TOGGLE + SLIDER + COLOR PICKER
+--==================================================
 
 local scroll = Instance.new("ScrollingFrame")
 scroll.Size = UDim2.new(1,-16,1,-100)
@@ -229,63 +231,67 @@ scroll.Parent = mainFrame
 
 local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0,6)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Parent = scroll
 
 layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-	scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y+10)
+	scroll.CanvasSize = UDim2.new(
+		0,0,0,
+		layout.AbsoluteContentSize.Y + 12
+	)
 end)
 
 local order = 0
 
-local function NextOrder()
+local function GetOrder()
 	order += 1
 	return order
 end
 
 local function CreateToggle(name,desc,callback)
-
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(1,-6,0,42)
 	frame.BackgroundColor3 = Color3.fromRGB(22,22,32)
-	frame.LayoutOrder = NextOrder()
+	frame.LayoutOrder = GetOrder()
 	frame.Parent = scroll
 
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0,8)
-	c.Parent = frame
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,8)
+	corner.Parent = frame
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(.65,0,.5,0)
-	label.Position = UDim2.new(0,8,0,3)
-	label.BackgroundTransparency = 1
-	label.Text = name
-	label.TextColor3 = Color3.new(1,1,1)
-	label.TextSize = 11
-	label.Font = Enum.Font.GothamBold
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = frame
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(.65,0,.5,0)
+	text.Position = UDim2.new(0,8,0,3)
+	text.BackgroundTransparency = 1
+	text.Text = name
+	text.TextColor3 = Color3.new(1,1,1)
+	text.TextSize = 11
+	text.Font = Enum.Font.GothamBold
+	text.TextXAlignment = Enum.TextXAlignment.Left
+	text.Parent = frame
 
-	local sub = Instance.new("TextLabel")
-	sub.Size = UDim2.new(.65,0,.4,0)
-	sub.Position = UDim2.new(0,8,.5,-2)
-	sub.BackgroundTransparency = 1
-	sub.Text = desc
-	sub.TextColor3 = Color3.fromRGB(140,140,160)
-	sub.TextSize = 9
-	sub.TextXAlignment = Enum.TextXAlignment.Left
-	sub.Parent = frame
+	local descText = Instance.new("TextLabel")
+	descText.Size = UDim2.new(.65,0,.4,0)
+	descText.Position = UDim2.new(0,8,.5,-2)
+	descText.BackgroundTransparency = 1
+	descText.Text = desc
+	descText.TextColor3 = Color3.fromRGB(140,140,160)
+	descText.TextSize = 9
+	descText.Font = Enum.Font.Gotham
+	descText.TextXAlignment = Enum.TextXAlignment.Left
+	descText.Parent = frame
 
 	local button = Instance.new("TextButton")
 	button.Size = UDim2.new(0,40,0,20)
 	button.Position = UDim2.new(1,-48,.5,-10)
+	button.BackgroundColor3 = Color3.fromRGB(45,45,60)
 	button.Text = ""
 	button.AutoButtonColor = false
-	button.BackgroundColor3 = Color3.fromRGB(45,45,60)
 	button.Parent = frame
 
-	local bc = Instance.new("UICorner")
-	bc.CornerRadius = UDim.new(1,0)
-	bc.Parent = button
+	local trackCorner = Instance.new("UICorner")
+	trackCorner.CornerRadius = UDim.new(1,0)
+	trackCorner.Parent = button
 
 	local knob = Instance.new("Frame")
 	knob.Size = UDim2.new(0,14,0,14)
@@ -293,14 +299,13 @@ local function CreateToggle(name,desc,callback)
 	knob.BackgroundColor3 = Color3.fromRGB(220,220,220)
 	knob.Parent = button
 
-	local kc = Instance.new("UICorner")
-	kc.CornerRadius = UDim.new(1,0)
-	kc.Parent = knob
+	local knobCorner = Instance.new("UICorner")
+	knobCorner.CornerRadius = UDim.new(1,0)
+	knobCorner.Parent = knob
 
 	local state = false
 
 	button.MouseButton1Click:Connect(function()
-
 		state = not state
 
 		local pos = state
@@ -310,7 +315,7 @@ local function CreateToggle(name,desc,callback)
 		TweenService:Create(
 			knob,
 			TweenInfo.new(.2),
-			{Position=pos}
+			{Position = pos}
 		):Play()
 
 		TweenService:Create(
@@ -331,28 +336,23 @@ local function CreateToggle(name,desc,callback)
 
 	return frame
 end
--- PHẦN 4/7
-
-local HitboxEnabled = false
-local HitboxSize = 50
 
 local function CreateSlider(name,min,max,default,callback)
-
 	local frame = Instance.new("Frame")
 	frame.Size = UDim2.new(1,-6,0,44)
 	frame.BackgroundColor3 = Color3.fromRGB(18,18,26)
-	frame.LayoutOrder = NextOrder()
+	frame.LayoutOrder = GetOrder()
 	frame.Parent = scroll
 
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0,6)
-	c.Parent = frame
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,6)
+	corner.Parent = frame
 
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1,-16,0,18)
 	label.Position = UDim2.new(0,8,0,3)
 	label.BackgroundTransparency = 1
-	label.Text = name..": "..default
+	label.Text = name .. ": " .. default
 	label.TextColor3 = Color3.fromRGB(200,200,220)
 	label.TextSize = 10
 	label.Font = Enum.Font.GothamBold
@@ -362,10 +362,14 @@ local function CreateSlider(name,min,max,default,callback)
 	local track = Instance.new("TextButton")
 	track.Size = UDim2.new(1,-16,0,8)
 	track.Position = UDim2.new(0,8,0,26)
+	track.BackgroundColor3 = Color3.fromRGB(45,45,60)
 	track.Text = ""
 	track.AutoButtonColor = false
-	track.BackgroundColor3 = Color3.fromRGB(45,45,60)
 	track.Parent = frame
+
+	local tc = Instance.new("UICorner")
+	tc.CornerRadius = UDim.new(1,0)
+	tc.Parent = track
 
 	local fill = Instance.new("Frame")
 	fill.Size = UDim2.new(
@@ -375,10 +379,13 @@ local function CreateSlider(name,min,max,default,callback)
 	fill.BackgroundColor3 = Color3.fromRGB(170,0,255)
 	fill.Parent = track
 
+	local fc = Instance.new("UICorner")
+	fc.CornerRadius = UDim.new(1,0)
+	fc.Parent = fill
+
 	local dragging = false
 
-	local function update(input)
-
+	local function Update(input)
 		local x = math.clamp(
 			(input.Position.X-track.AbsolutePosition.X)
 			/track.AbsoluteSize.X,
@@ -386,11 +393,11 @@ local function CreateSlider(name,min,max,default,callback)
 		)
 
 		local value = math.floor(
-			min+(max-min)*x
+			min + (max-min)*x
 		)
 
 		fill.Size = UDim2.new(x,0,1,0)
-		label.Text = name..": "..value
+		label.Text = name .. ": " .. value
 
 		if callback then
 			callback(value)
@@ -399,321 +406,226 @@ local function CreateSlider(name,min,max,default,callback)
 
 	track.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+			or input.UserInputType == Enum.UserInputType.Touch then
+
 			dragging = true
-			update(input)
+			Update(input)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and (
+			input.UserInputType == Enum.UserInputType.MouseMovement
+			or input.UserInputType == Enum.UserInputType.Touch
+		) then
+			Update(input)
 		end
 	end)
 
 	UserInputService.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1
-		or input.UserInputType == Enum.UserInputType.Touch then
+			or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = false
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging then
-			if input.UserInputType == Enum.UserInputType.MouseMovement
-			or input.UserInputType == Enum.UserInputType.Touch then
-				update(input)
-			end
-		end
-	end)
-
 	return frame
 end
+--==================================================
+-- ESP PLAYER
+--==================================================
 
-local hitboxSlider = CreateSlider(
-	"Size Hitbox",
-	1,
-	100,
-	50,
-	function(value)
+local PlayerESP = {}
 
-		HitboxSize = value
-
-		if HitboxEnabled then
-			Remote:FireServer(
-				"Hitbox",
-				{
-					enabled = true,
-					size = HitboxSize
-				}
-			)
-		end
-	end
-)
-
-hitboxSlider.Visible = false
-
-local hitboxToggle = CreateToggle(
-	"Hitbox Player",
-	"Tăng hitbox người chơi",
-	function(state)
-
-		HitboxEnabled = state
-		hitboxSlider.Visible = state
-
-		Remote:FireServer(
-			"Hitbox",
-			{
-				enabled = state,
-				size = HitboxSize
-			}
+local function PlayerColor()
+	if Rainbow.ESPPlayer then
+		return Color3.fromHSV(
+			rainbowOffset,
+			.85,
+			1
 		)
 	end
-)
--- PHẦN 5/7
 
-local ESPPlayer = false
-local ESPMob = false
+	return Colors.ESPPlayer
+end
 
-local PlayerESPColor = Color3.fromRGB(0,170,255)
-local MobESPColor = Color3.fromRGB(255,80,80)
-
-local ESPRainbowPlayer = false
-local ESPRainbowMob = false
-
-local highlights = {}
-
-local function removeESP(model)
-
-	local old = highlights[model]
+local function RemovePlayerESP(player)
+	local old = PlayerESP[player]
 
 	if old then
 		old:Destroy()
-		highlights[model] = nil
+		PlayerESP[player] = nil
 	end
 end
 
-local function addESP(model,color)
-
-	if not model then
+local function AddPlayerESP(player)
+	if player == LocalPlayer then
 		return
 	end
 
-	removeESP(model)
+	RemovePlayerESP(player)
 
-	local h = Instance.new("Highlight")
-	h.Name = "QAHubESP"
-	h.Adornee = model
-	h.FillColor = color
-	h.OutlineColor = color
-	h.FillTransparency = .65
-	h.OutlineTransparency = 0
-	h.Parent = model
+	if not player.Character then
+		return
+	end
 
-	highlights[model] = h
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "QA_PlayerESP"
+	highlight.Adornee = player.Character
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillTransparency = .65
+	highlight.OutlineTransparency = 0
+	highlight.FillColor = PlayerColor()
+	highlight.OutlineColor = PlayerColor()
+	highlight.Parent = player.Character
+
+	PlayerESP[player] = highlight
 end
 
-local function updatePlayerESP()
-
-	for _,player in ipairs(Players:GetPlayers()) do
-
-		if player ~= LocalPlayer then
-
-			if ESPPlayer and player.Character then
-				addESP(
-					player.Character,
-					PlayerESPColor
-				)
-			else
-				removeESP(player.Character)
-			end
-
+local function UpdatePlayerESP()
+	for player,highlight in pairs(PlayerESP) do
+		if highlight and highlight.Parent then
+			local c = PlayerColor()
+			highlight.FillColor = c
+			highlight.OutlineColor = c
 		end
 	end
 end
 
-local function updateMobESP()
-
-	for _,obj in ipairs(workspace:GetDescendants()) do
-
-		if obj:IsA("Model")
-		and obj:FindFirstChildOfClass("Humanoid")
-		and not Players:GetPlayerFromCharacter(obj) then
-
-			if ESPMob then
-				addESP(obj,MobESPColor)
-			else
-				removeESP(obj)
-			end
-
+local espPlayerColorPicker =
+	CreateSlider(
+		"ESP Player màu",
+		1,
+		100,
+		50,
+		function()
 		end
-	end
-end
+	)
 
-CreateToggle(
+espPlayerColorPicker.Visible = false
+
+local espPlayerToggle = CreateToggle(
 	"ESP Player",
 	"Hiện người chơi",
 	function(state)
-		ESPPlayer = state
-		updatePlayerESP()
+		States.ESPPlayer = state
+
+		if not state then
+			for player in pairs(PlayerESP) do
+				RemovePlayerESP(player)
+			end
+		else
+			for _,player in ipairs(Players:GetPlayers()) do
+				AddPlayerESP(player)
+			end
+		end
 	end
 )
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		task.wait(.5)
+
+		if States.ESPPlayer then
+			AddPlayerESP(player)
+		end
+	end)
+end)
+
+for _,player in ipairs(Players:GetPlayers()) do
+	if player ~= LocalPlayer then
+		player.CharacterAdded:Connect(function()
+			task.wait(.5)
+
+			if States.ESPPlayer then
+				AddPlayerESP(player)
+			end
+		end)
+	end
+end
+--==================================================
+-- ESP MOB + FULLBRIGHT + FIX LAG
+--==================================================
+
+local MobESP = {}
+
+local function MobColor()
+	if Rainbow.ESPMob then
+		return Color3.fromHSV(
+			(rainbowOffset + .25) % 1,
+			.85,
+			1
+		)
+	end
+
+	return Colors.ESPMob
+end
+
+local function IsMob(model)
+	if not model:IsA("Model") then
+		return false
+	end
+
+	if not model:FindFirstChildOfClass("Humanoid") then
+		return false
+	end
+
+	if not model:FindFirstChild("HumanoidRootPart") then
+		return false
+	end
+
+	if Players:GetPlayerFromCharacter(model) then
+		return false
+	end
+
+	return true
+end
+
+local function UpdateMobESP()
+	if not States.ESPMob then
+		for model,highlight in pairs(MobESP) do
+			if highlight then
+				highlight:Destroy()
+			end
+		end
+
+		MobESP = {}
+		return
+	end
+
+	for _,model in ipairs(workspace:GetChildren()) do
+		if IsMob(model) and not MobESP[model] then
+
+			local highlight = Instance.new("Highlight")
+			highlight.Name = "QA_MobESP"
+			highlight.Adornee = model
+			highlight.DepthMode =
+				Enum.HighlightDepthMode.AlwaysOnTop
+			highlight.FillTransparency = .65
+			highlight.OutlineTransparency = 0
+			highlight.Parent = model
+
+			MobESP[model] = highlight
+		end
+	end
+
+	for model,highlight in pairs(MobESP) do
+		if highlight and highlight.Parent then
+			local c = MobColor()
+			highlight.FillColor = c
+			highlight.OutlineColor = c
+		else
+			MobESP[model] = nil
+		end
+	end
+end
 
 CreateToggle(
 	"ESP Mob",
-	"Hiện NPC / quái",
+	"Hiện quái vật",
 	function(state)
-		ESPMob = state
-		updateMobESP()
-	end
-)
-
-RunService.RenderStepped:Connect(function()
-
-	local c = Color3.fromHSV(hue,.85,1)
-
-	-- 🌈 ESP PLAYER
-	if ESPRainbowPlayer then
-		PlayerESPColor = c
-	end
-
-	-- 🌈 ESP MOB
-	if ESPRainbowMob then
-		MobESPColor = c
-	end
-
-	for model,h in pairs(highlights) do
-		if h and h.Parent then
-
-			if Players:GetPlayerFromCharacter(model) then
-				h.FillColor = PlayerESPColor
-				h.OutlineColor = PlayerESPColor
-			else
-				h.FillColor = MobESPColor
-				h.OutlineColor = MobESPColor
-			end
-
-		else
-			highlights[model] = nil
-		end
-	end
-end)
--- PHẦN 6/7
-
-local function CreateColorButton(name,colors,callback)
-
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1,-6,0,55)
-	frame.BackgroundColor3 = Color3.fromRGB(18,18,26)
-	frame.LayoutOrder = NextOrder()
-	frame.Parent = scroll
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1,-10,0,18)
-	label.Position = UDim2.new(0,8,0,3)
-	label.BackgroundTransparency = 1
-	label.Text = name
-	label.TextColor3 = Color3.fromRGB(200,200,220)
-	label.TextSize = 10
-	label.Font = Enum.Font.GothamBold
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = frame
-
-	for i,data in ipairs(colors) do
-
-		local b = Instance.new("TextButton")
-		b.Size = UDim2.new(0,24,0,20)
-		b.Position = UDim2.new(
-			0,
-			8+(i-1)*29,
-			0,
-			27
-		)
-
-		b.Text = ""
-		b.BackgroundColor3 = data[2]
-		b.Parent = frame
-
-		local bc = Instance.new("UICorner")
-		bc.CornerRadius = UDim.new(0,4)
-		bc.Parent = b
-
-		b.MouseButton1Click:Connect(function()
-			callback(data[1],data[2])
-		end)
-	end
-
-	return frame
-end
-
-local colors = {
-	{"Đỏ",Color3.fromRGB(255,0,0)},
-	{"Xanh",Color3.fromRGB(0,170,255)},
-	{"Xanh lá",Color3.fromRGB(0,255,80)},
-	{"Vàng",Color3.fromRGB(255,230,0)},
-	{"Tím",Color3.fromRGB(170,0,255)},
-	{"Hồng",Color3.fromRGB(255,80,200)}
-}
-
-CreateColorButton(
-	"Màu ESP Player",
-	colors,
-	function(name,color)
-
-		ESPRainbowPlayer = false
-		PlayerESPColor = color
-		updatePlayerESP()
-	end
-)
-
-CreateColorButton(
-	"Màu ESP Mob",
-	colors,
-	function(name,color)
-
-		ESPRainbowMob = false
-		MobESPColor = color
-		updateMobESP()
-	end
-)
-
-CreateToggle(
-	"Rainbow ESP",
-	"ESP đổi màu liên tục",
-	function(state)
-
-		ESPRainbowPlayer = state
-		ESPRainbowMob = state
-	end
-)
-
-local FixLag = false
-
-local function ApplyFixLag(state)
-
-	FixLag = state
-
-	for _,obj in ipairs(workspace:GetDescendants()) do
-
-		if obj:IsA("BasePart") then
-			obj.CastShadow = not state
-		end
-
-		if obj:IsA("ParticleEmitter")
-		or obj:IsA("Trail")
-		or obj:IsA("Beam") then
-
-			obj.Enabled = not state
-		end
-
-		if obj:IsA("PointLight")
-		or obj:IsA("SpotLight")
-		or obj:IsA("SurfaceLight") then
-
-			obj.Enabled = not state
-		end
-	end
-end
-
-CreateToggle(
-	"Fix Lag",
-	"Tắt bóng và hiệu ứng",
-	function(state)
-		ApplyFixLag(state)
+		States.ESPMob = state
+		UpdateMobESP()
 	end
 )
 
@@ -721,182 +633,387 @@ CreateToggle(
 	"Fullbright",
 	"Sáng toàn bản đồ",
 	function(state)
+		States.Fullbright = state
 
 		if state then
 			Lighting.Brightness = 2
 			Lighting.ClockTime = 14
-			Lighting.GlobalShadows = false
 			Lighting.FogEnd = 100000
+			Lighting.GlobalShadows = false
+			Lighting.Ambient = Color3.new(1,1,1)
+			Lighting.OutdoorAmbient = Color3.new(1,1,1)
 		else
-			Lighting.Brightness = 1
 			Lighting.GlobalShadows = true
 			Lighting.FogEnd = 1000
 		end
-
 	end
 )
--- PHẦN 7/7
-
-local SpeedEnabled = false
-local SpeedValue = 100
-
-local JumpEnabled = false
-local JumpValue = 100
-
-local Noclip = false
-local InfJump = false
-
-local speedSlider = CreateSlider(
-	"Speed Value",
-	16,
-	300,
-	100,
-	function(value)
-		SpeedValue = value
-	end
-)
-
-speedSlider.Visible = false
 
 CreateToggle(
-	"Speed",
-	"Tăng tốc độ di chuyển",
+	"Fix Lag",
+	"Giảm hiệu ứng không cần thiết",
 	function(state)
-		SpeedEnabled = state
-		speedSlider.Visible = state
+		States.FixLag = state
+
+		for _,obj in ipairs(workspace:GetDescendants()) do
+			if obj:IsA("ParticleEmitter")
+				or obj:IsA("Trail")
+				or obj:IsA("Beam") then
+
+				obj.Enabled = not state
+			end
+		end
 	end
 )
 
-local jumpSlider = CreateSlider(
-	"Jump Power",
-	50,
-	300,
-	100,
-	function(value)
-		JumpValue = value
-	end
-)
+workspace.DescendantAdded:Connect(function(obj)
+	if States.FixLag then
+		if obj:IsA("ParticleEmitter")
+			or obj:IsA("Trail")
+			or obj:IsA("Beam") then
 
-jumpSlider.Visible = false
-
-CreateToggle(
-	"Jump Boost",
-	"Tăng lực nhảy",
-	function(state)
-		JumpEnabled = state
-		jumpSlider.Visible = state
+			obj.Enabled = false
+		end
 	end
-)
+end)
+--==================================================
+-- NOCLIP + INFJUMP + SPEED + JUMP BOOST
+--==================================================
 
 CreateToggle(
 	"Noclip",
 	"Đi xuyên tường",
 	function(state)
-		Noclip = state
+		States.Noclip = state
 	end
 )
+
+RunService.Stepped:Connect(function()
+	if not States.Noclip then
+		return
+	end
+
+	local character = LocalPlayer.Character
+	if not character then
+		return
+	end
+
+	for _,part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") then
+			part.CanCollide = false
+		end
+	end
+end)
 
 CreateToggle(
 	"InfJump",
 	"Nhảy vô tận",
 	function(state)
-		InfJump = state
+		States.InfJump = state
 	end
 )
 
-RunService.Stepped:Connect(function()
+UserInputService.JumpRequest:Connect(function()
+	if not States.InfJump then
+		return
+	end
 
 	local character = LocalPlayer.Character
-
 	if not character then
 		return
 	end
 
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local humanoid =
+		character:FindFirstChildOfClass("Humanoid")
 
 	if humanoid then
+		humanoid:ChangeState(
+			Enum.HumanoidStateType.Jumping
+		)
+	end
+end)
 
-		if SpeedEnabled then
-			humanoid.WalkSpeed = SpeedValue
-		else
-			humanoid.WalkSpeed = 16
-		end
+local speedSlider
 
-		if JumpEnabled then
-			humanoid.JumpPower = JumpValue
-		else
-			humanoid.JumpPower = 50
-		end
+CreateToggle(
+	"Speed",
+	"Tăng tốc độ di chuyển",
+	function(state)
+		States.Speed = state
+	end
+)
 
+speedSlider = CreateSlider(
+	"Speed Value",
+	16,
+	300,
+	100,
+	function(value)
+		Values.Speed = value
+	end
+)
+
+local jumpSlider
+
+CreateToggle(
+	"Jump Boost",
+	"Tăng lực nhảy",
+	function(state)
+		States.JumpBoost = state
+	end
+)
+
+jumpSlider = CreateSlider(
+	"Jump Power",
+	50,
+	300,
+	100,
+	function(value)
+		Values.JumpPower = value
+	end
+)
+
+RunService.RenderStepped:Connect(function()
+	local character = LocalPlayer.Character
+	if not character then
+		return
 	end
 
-	if Noclip then
+	local humanoid =
+		character:FindFirstChildOfClass("Humanoid")
 
-		for _,obj in ipairs(character:GetDescendants()) do
-			if obj:IsA("BasePart") then
-				obj.CanCollide = false
+	if not humanoid then
+		return
+	end
+
+	if States.Speed then
+		humanoid.WalkSpeed = Values.Speed
+	else
+		humanoid.WalkSpeed = 16
+	end
+
+	if States.JumpBoost then
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = Values.JumpPower
+	else
+		humanoid.JumpPower = 50
+	end
+end)
+--==================================================
+-- HITBOX PLAYER + NPC
+-- SIZE 1 -> 100
+-- MÀU + RAINBOW CHẠY LIÊN TỤC
+--==================================================
+
+local HitboxModels = {}
+local HitboxOriginal = {}
+
+local function HitboxColor()
+	if Rainbow.Hitbox then
+		return Color3.fromHSV(
+			rainbowOffset,
+			.85,
+			1
+		)
+	end
+
+	return Colors.Hitbox
+end
+
+local function ValidHitboxModel(model)
+	if not model then
+		return false
+	end
+
+	local humanoid =
+		model:FindFirstChildOfClass("Humanoid")
+
+	local root =
+		model:FindFirstChild("HumanoidRootPart")
+
+	if not humanoid or not root then
+		return false
+	end
+
+	if humanoid.Health <= 0 then
+		return false
+	end
+
+	if model == LocalPlayer.Character then
+		return false
+	end
+
+	return true
+end
+
+local function ApplyHitbox(model)
+	if not ValidHitboxModel(model) then
+		return
+	end
+
+	local root =
+		model:FindFirstChild("HumanoidRootPart")
+
+	if not HitboxOriginal[model] then
+		HitboxOriginal[model] = {
+			Size = root.Size,
+			Transparency = root.Transparency,
+			Material = root.Material,
+			Color = root.Color
+		}
+	end
+
+	local size = math.clamp(
+		Values.HitboxSize,
+		1,
+		100
+	)
+
+	root.Size = Vector3.new(
+		size,
+		size,
+		size
+	)
+
+	root.Transparency = .7
+	root.Material = Enum.Material.Neon
+	root.Color = HitboxColor()
+	root.CanCollide = false
+
+	HitboxModels[model] = root
+end
+
+local function RestoreHitbox(model)
+	local root =
+		model and model:FindFirstChild(
+			"HumanoidRootPart"
+		)
+
+	local old = HitboxOriginal[model]
+
+	if root and old then
+		root.Size = old.Size
+		root.Transparency = old.Transparency
+		root.Material = old.Material
+		root.Color = old.Color
+	end
+
+	HitboxOriginal[model] = nil
+	HitboxModels[model] = nil
+end
+
+local function ClearHitboxes()
+	for model in pairs(HitboxOriginal) do
+		pcall(function()
+			RestoreHitbox(model)
+		end)
+	end
+
+	HitboxOriginal = {}
+	HitboxModels = {}
+end
+
+local function UpdateHitboxes()
+	if not States.Hitbox then
+		return
+	end
+
+	for _,player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer
+			and player.Character then
+
+			ApplyHitbox(player.Character)
+		end
+	end
+
+	for _,obj in ipairs(workspace:GetDescendants()) do
+		if IsMob(obj) then
+			ApplyHitbox(obj)
+		end
+	end
+end
+
+local hitboxToggle = CreateToggle(
+	"Hitbox Player + NPC",
+	"Tăng vùng hitbox",
+	function(state)
+		States.Hitbox = state
+
+		if not state then
+			ClearHitboxes()
+		else
+			UpdateHitboxes()
+		end
+	end
+)
+
+local hitboxSlider = CreateSlider(
+	"Size Hitbox",
+	1,
+	100,
+	20,
+	function(value)
+		Values.HitboxSize = math.clamp(
+			value,
+			1,
+			100
+		)
+
+		UpdateHitboxes()
+	end
+)
+
+local rainbowHitbox = CreateToggle(
+	"Rainbow Hitbox",
+	"Đổi màu liên tục",
+	function(state)
+		Rainbow.Hitbox = state
+	end
+)
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		task.wait(.5)
+
+		if States.Hitbox then
+			ApplyHitbox(player.Character)
+		end
+	end)
+end)
+
+workspace.DescendantAdded:Connect(function(obj)
+	if States.Hitbox and obj:IsA("Model") then
+		task.wait(.1)
+
+		if IsMob(obj) then
+			ApplyHitbox(obj)
+		end
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if States.Hitbox then
+		for model,root in pairs(HitboxModels) do
+			if root and root.Parent then
+				root.Color = HitboxColor()
+				root.Size = Vector3.new(
+					Values.HitboxSize,
+					Values.HitboxSize,
+					Values.HitboxSize
+				)
 			end
 		end
-
 	end
+
+	UpdatePlayerESP()
+	UpdateMobESP()
 end)
 
-UserInputService.JumpRequest:Connect(function()
+--==================================================
+-- KHỞI TẠO
+--==================================================
 
-	if InfJump then
+speedSlider.Visible = false
+jumpSlider.Visible = false
 
-		local character = LocalPlayer.Character
-		local humanoid =
-			character
-			and character:FindFirstChildOfClass("Humanoid")
-
-		if humanoid then
-			humanoid:ChangeState(
-				Enum.HumanoidStateType.Jumping
-			)
-		end
-
-	end
-end)
-
-Players.PlayerAdded:Connect(function(player)
-
-	player.CharacterAdded:Connect(function()
-
-		task.wait(1)
-
-		if HitboxEnabled then
-			Remote:FireServer(
-				"Hitbox",
-				{
-					enabled = true,
-					size = HitboxSize
-				}
-			)
-		end
-	end)
-end)
-
-LocalPlayer.CharacterAdded:Connect(function()
-	task.wait(.5)
-
-	if SpeedEnabled then
-		local h = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-		if h then
-			h.WalkSpeed = SpeedValue
-		end
-	end
-end)
-
--- Cập nhật ESP khi Player respawn
-Players.PlayerAdded:Connect(function(player)
-
-	player.CharacterAdded:Connect(function(character)
-
-		task.wait(.3)
-
-		if ESPPlayer then
-			addESP(character,PlayerESPColor)
-		end
-	end)
-end)
+print("QA Hub loaded successfully")
