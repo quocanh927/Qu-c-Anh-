@@ -1,561 +1,178 @@
---========================================================
--- 👑 QUOC ANH MENU
--- PART 1/5
--- GUI + DRAG + OPEN/CLOSE
---========================================================
+-- ============================================
+-- PHẦN 1: KHAI BÁO & CẤU HÌNH (COPY ĐOẠN NÀY)
+-- ============================================
 
-local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
-local Player = Players.LocalPlayer
+-- ============================================
+-- CẤU HÌNH CHÍNH (ĐÃ CẬP NHẬT)
+-- ============================================
+local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- 👈 API Key của bạn
+local JNKIE_GETKEY_URL = "https://link4m.net/ie3RK7Vq"        -- 👈 Link getkey mới
+local TARGET_SCRIPT_URL = "https://raw.githubusercontent.com/Ryuun0x/Clover/refs/heads/main/main.lua"
+local KEY_FILE_NAME = "CloverHub_KeyData.json"
+-- ============================================
+-- PHẦN 2: HÀM LẤY KEY TỪ JNKIE (COPY ĐOẠN NÀY)
+-- ============================================
 
-local Gui = Instance.new("ScreenGui")
-Gui.Name = "QuocAnhHitBox"
-Gui.ResetOnSpawn = false
-Gui.IgnoreGuiInset = true
-Gui.Parent = Player:WaitForChild("PlayerGui")
-
-local OpenButton = Instance.new("TextButton")
-OpenButton.Size = UDim2.fromOffset(54,54)
-OpenButton.Position = UDim2.new(0,18,0.5,-27)
-OpenButton.BackgroundColor3 = Color3.fromRGB(25,25,25)
-OpenButton.BorderSizePixel = 0
-OpenButton.Text = "👑"
-OpenButton.TextSize = 23
-OpenButton.AutoButtonColor = false
-OpenButton.Parent = Gui
-
-Instance.new("UICorner",OpenButton).CornerRadius = UDim.new(1,0)
-
-local OpenStroke = Instance.new("UIStroke",OpenButton)
-OpenStroke.Color = Color3.fromRGB(255,210,45)
-OpenStroke.Thickness = 2
-
-local Menu = Instance.new("Frame")
-Menu.Size = UDim2.fromOffset(285,330)
-Menu.Position = UDim2.new(0.5,-142,0.5,-165)
-Menu.BackgroundColor3 = Color3.fromRGB(20,20,20)
-Menu.BorderSizePixel = 0
-Menu.Visible = false
-Menu.Parent = Gui
-
-Instance.new("UICorner",Menu).CornerRadius = UDim.new(0,13)
-
-local MenuStroke = Instance.new("UIStroke",Menu)
-MenuStroke.Color = Color3.fromRGB(255,210,45)
-MenuStroke.Thickness = 2
-
-local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1,-55,0,45)
-Title.Position = UDim2.fromOffset(10,2)
-Title.BackgroundTransparency = 1
-Title.Text = "👑 Quoc Anh HitBox"
-Title.TextColor3 = Color3.fromRGB(255,210,45)
-Title.TextSize = 18
-Title.Font = Enum.Font.GothamBold
-Title.Parent = Menu
-
-local Close = Instance.new("TextButton")
-Close.Size = UDim2.fromOffset(32,32)
-Close.Position = UDim2.new(1,-40,0,7)
-Close.BackgroundColor3 = Color3.fromRGB(45,45,45)
-Close.BorderSizePixel = 0
-Close.Text = "×"
-Close.TextColor3 = Color3.new(1,1,1)
-Close.TextSize = 22
-Close.Parent = Menu
-
-Instance.new("UICorner",Close).CornerRadius = UDim.new(1,0)
-
-local dragging = false
-local dragStart
-local startPos
-
-Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = Menu.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if not dragging then return end
-
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
-
-        local delta = input.Position - dragStart
-
-        Menu.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
-
-local opened = false
-
-local function ShowMenu()
-    opened = true
-    Menu.Visible = true
-    Menu.Size = UDim2.fromOffset(245,285)
-
-    TweenService:Create(
-        Menu,
-        TweenInfo.new(.25,Enum.EasingStyle.Back),
-        {Size = UDim2.fromOffset(285,330)}
-    ):Play()
+local function FetchKeyFromJNKIE()
+    -- Vì JNKIE không có API URL, hàm này giả định key được lấy thủ công
+    -- Nhưng chúng ta vẫn giữ API Key để có thể sử dụng sau này
+    warn("[CloverHub] JNKIE không cung cấp API URL. Vui lòng nhập key thủ công.")
+    return nil
 end
 
-local function HideMenu()
-    opened = false
+-- Lấy key từ API, nếu lỗi dùng key dự phòng (bạn có thể thay key mặc định này)
+local TodayKey = FetchKeyFromJNKIE() or "6b5cdaa6-eb83-4427-9791-e39f6d723eda"
+-- ============================================
+-- PHẦN 3: HÀM HỖ TRỢ (COPY ĐOẠN NÀY)
+-- ============================================
 
-    TweenService:Create(
-        Menu,
-        TweenInfo.new(.18),
-        {Size = UDim2.fromOffset(245,285)}
-    ):Play()
-
-    task.delay(.18,function()
-        if not opened then
-            Menu.Visible = false
+local function LaunchMainScript()
+    task.spawn(function()
+        local success, result = pcall(function()
+            return loadstring(game:HttpGet(TARGET_SCRIPT_URL))()
+        end)
+        if not success then
+            warn("[CloverHub Error]:", result)
         end
     end)
 end
 
-OpenButton.Activated:Connect(function()
-    if opened then
-        HideMenu()
-    else
-        ShowMenu()
-    end
-end)
-
-Close.Activated:Connect(HideMenu)
---========================================================
--- PART 2/5
--- TOGGLE HITBOX + ESP
---========================================================
-
-local Settings = {
-    HitBox = false,
-    ESP = false,
-    Size = 10,
-    Color = Color3.fromRGB(255,210,45),
-    Rainbow = false
-}
-
-local function MakeToggle(y,text)
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1,-85,0,40)
-    label.Position = UDim2.fromOffset(15,y)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.TextColor3 = Color3.new(1,1,1)
-    label.TextSize = 14
-    label.Font = Enum.Font.GothamBold
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = Menu
-
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.fromOffset(52,28)
-    button.Position = UDim2.new(1,-68,0,y+6)
-    button.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    button.BorderSizePixel = 0
-    button.Text = ""
-    button.Parent = Menu
-
-    Instance.new("UICorner",button).CornerRadius = UDim.new(1,0)
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.fromOffset(22,22)
-    knob.Position = UDim2.fromOffset(3,3)
-    knob.BackgroundColor3 = Color3.fromRGB(245,245,245)
-    knob.BorderSizePixel = 0
-    knob.Parent = button
-
-    Instance.new("UICorner",knob).CornerRadius = UDim.new(1,0)
-
-    return button,knob
+local function ShowRemainingToast(secondsLeft)
+    -- Code hiển thị thông báo toast (giữ nguyên từ script gốc của bạn)
+    -- ... (phần code toast của bạn)
 end
 
-local HitToggle,HitKnob =
-    MakeToggle(55,"HitBox")
-
-local ESPToggle,ESPKnob =
-    MakeToggle(100,"ESP")
-
-local function AnimateToggle(button,knob,state)
-
-    TweenService:Create(
-        button,
-        TweenInfo.new(.2),
-        {
-            BackgroundColor3 =
-                state
-                and Color3.fromRGB(255,195,35)
-                or Color3.fromRGB(60,60,60)
-        }
-    ):Play()
-
-    TweenService:Create(
-        knob,
-        TweenInfo.new(.25,Enum.EasingStyle.Back),
-        {
-            Position =
-                state
-                and UDim2.new(1,-25,0,3)
-                or UDim2.fromOffset(3,3)
-        }
-    ):Play()
-end
-
-HitToggle.Activated:Connect(function()
-    Settings.HitBox = not Settings.HitBox
-    AnimateToggle(HitToggle, HitKnob, Settings.HitBox)
-    
-    if not Settings.HitBox then
-        for _, v in ipairs(Players:GetPlayers()) do
-            if v ~= Player then
-                pcall(function()
-                    local root = v.Character and v.Character:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        root.Size = Vector3.new(2, 2, 1)
-                        root.Transparency = 0
-                        root.BrickColor = BrickColor.new("Medium stone grey")
-                        root.Material = "Plastic"
-                        root.CanCollide = true
-                    end
-                end)
-            end
-        end
-    end
-end)
-
-ESPToggle.Activated:Connect(function()
-    Settings.ESP = not Settings.ESP
-    AnimateToggle(ESPToggle, ESPKnob, Settings.ESP)
-    
-    if not Settings.ESP then
-        for _, obj in pairs(espObjects) do
-            pcall(function() obj:Destroy() end)
-        end
-        espObjects = {}
-    end
-end)
---========================================================
--- PART 3/5
--- SIZE 1-50
---========================================================
-
-local SizeLabel = Instance.new("TextLabel")
-SizeLabel.Size = UDim2.new(1,-30,0,30)
-SizeLabel.Position = UDim2.fromOffset(15,145)
-SizeLabel.BackgroundTransparency = 1
-SizeLabel.Text = "📏 Size: 10"
-SizeLabel.TextColor3 = Color3.new(1,1,1)
-SizeLabel.TextSize = 14
-SizeLabel.Font = Enum.Font.GothamBold
-SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
-SizeLabel.Parent = Menu
-
-local Slider = Instance.new("TextButton")
-Slider.Size = UDim2.new(1,-30,0,8)
-Slider.Position = UDim2.fromOffset(15,177)
-Slider.BackgroundColor3 = Color3.fromRGB(55,55,55)
-Slider.BorderSizePixel = 0
-Slider.Text = ""
-Slider.Parent = Menu
-
-Instance.new("UICorner",Slider).CornerRadius = UDim.new(1,0)
-
-local Fill = Instance.new("Frame")
-Fill.Size = UDim2.new((Settings.Size-1)/49,0,1,0)
-Fill.BackgroundColor3 = Settings.Color
-Fill.BorderSizePixel = 0
-Fill.Parent = Slider
-
-Instance.new("UICorner",Fill).CornerRadius = UDim.new(1,0)
-
-local sliding = false
-
-local function SetSize(x)
-
-    local width = Slider.AbsoluteSize.X
-
-    if width <= 0 then return end
-
-    local percent = math.clamp(
-        (x-Slider.AbsolutePosition.X)/width,
-        0,
-        1
-    )
-
-    Settings.Size =
-        math.floor(1+percent*49+0.5)
-
-    Fill.Size =
-        UDim2.new(percent,0,1,0)
-
-    SizeLabel.Text =
-        "📏 Size: "..Settings.Size
-end
-
-Slider.InputBegan:Connect(function(input)
-
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-
-        sliding = true
-        SetSize(input.Position.X)
-
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-
-    if not sliding then return end
-
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
-
-        SetSize(input.Position.X)
-
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-
-        sliding = false
-
-    end
-end)
---========================================================
--- PART 4/5
--- CHỌN MÀU + RAINBOW
---========================================================
-
-local ColorButton = Instance.new("TextButton")
-ColorButton.Size = UDim2.new(1,-30,0,38)
-ColorButton.Position = UDim2.fromOffset(15,200)
-ColorButton.BackgroundColor3 = Color3.fromRGB(40,40,40)
-ColorButton.BorderSizePixel = 0
-ColorButton.Text = "🎨  Chọn màu"
-ColorButton.TextColor3 = Color3.new(1,1,1)
-ColorButton.TextSize = 13
-ColorButton.Font = Enum.Font.GothamBold
-ColorButton.Parent = Menu
-
-Instance.new("UICorner",ColorButton).CornerRadius = UDim.new(0,8)
-
-local ColorPanel = Instance.new("Frame")
-ColorPanel.Size = UDim2.new(1,-30,0,45)
-ColorPanel.Position = UDim2.fromOffset(15,243)
-ColorPanel.BackgroundColor3 = Color3.fromRGB(30,30,30)
-ColorPanel.BorderSizePixel = 0
-ColorPanel.Visible = false
-ColorPanel.Parent = Menu
-
-Instance.new("UICorner",ColorPanel).CornerRadius = UDim.new(0,8)
-
-local colors = {
-    {"Đỏ",Color3.fromRGB(255,70,70)},
-    {"Xanh",Color3.fromRGB(70,140,255)},
-    {"Lá",Color3.fromRGB(70,255,120)},
-    {"Vàng",Color3.fromRGB(255,210,45)},
-    {"🌈",nil}
-}
-
-for i,data in ipairs(colors) do
-
-    local b = Instance.new("TextButton")
-
-    b.Size = UDim2.fromOffset(43,28)
-    b.Position = UDim2.fromOffset(6+(i-1)*49,8)
-    b.BackgroundColor3 =
-        data[2] or Color3.fromRGB(255,100,220)
-
-    b.BorderSizePixel = 0
-    b.Text = data[1]
-    b.TextSize = 9
-    b.TextColor3 = Color3.new(1,1,1)
-    b.Font = Enum.Font.GothamBold
-    b.Parent = ColorPanel
-
-    Instance.new("UICorner",b).CornerRadius = UDim.new(0,6)
-
-    b.Activated:Connect(function()
-
-        if data[1] == "🌈" then
-
-            Settings.Rainbow = true
-
-        else
-
-            Settings.Rainbow = false
-            Settings.Color = data[2]
-            Fill.BackgroundColor3 = data[2]
-
-        end
-
-    end)
-end
-
-local ColorOpen = false
-
-ColorButton.Activated:Connect(function()
-
-    ColorOpen = not ColorOpen
-
-    ColorPanel.Visible = ColorOpen
-
-    if ColorOpen then
-        Menu.Size = UDim2.fromOffset(285,300)
-    else
-        Menu.Size = UDim2.fromOffset(285,250)
-    end
-
-end)
-
-local function GetColor()
-
-    if Settings.Rainbow then
-
-        return Color3.fromHSV(
-            (os.clock()%5)/5,
-            1,
-            1
-        )
-
-    end
-
-    return Settings.Color
-end
---========================================================
--- PART 5/5
--- HITBOX + ESP (GIỮ NGUYÊN CODE CỦA BẠN)
---========================================================
-
--- Khai báo biến toàn cục cho hitbox
-_G.HeadSize = Settings.Size
-_G.Disabled = Settings.HitBox
-_G.HeadColor = Settings.Color
-
-local espObjects = {}
-
--- Hàm chuyển Color3 sang BrickColor
-local function Color3ToBrickColor(color3)
-    return BrickColor.new(Color3.new(color3.R, color3.G, color3.B))
-end
-
--- ====== GIỮ NGUYÊN CODE HITBOX CỦA BẠN ======
-game:GetService('RunService').RenderStepped:connect(function()
-    if _G.Disabled then
-        for i,v in next, game:GetService('Players'):GetPlayers() do
-            if v.Name ~= game:GetService('Players').LocalPlayer.Name then
-                pcall(function()
-                    v.Character.HumanoidRootPart.Size = Vector3.new(_G.HeadSize,_G.HeadSize,_G.HeadSize)
-                    v.Character.HumanoidRootPart.Transparency = 0.7
-                    v.Character.HumanoidRootPart.BrickColor = BrickColor.new(_G.HeadColor)
-                    v.Character.HumanoidRootPart.Material = "Neon"
-                    v.Character.HumanoidRootPart.CanCollide = false
-                end)
-            end
-        end
-    end
-end)
-
--- ====== ESP ======
-local function UpdateESP()
-    if not Settings.ESP then return end
-    
-    local camera = workspace.CurrentCamera
-    local espColor = GetColor()
-    
-    for _, v in ipairs(Players:GetPlayers()) do
-        if v ~= Player and v.Character then
-            local root = v.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                local pos, onScreen = camera:WorldToScreenPoint(root.Position + Vector3.new(0, 2.5, 0))
-                
-                if onScreen then
-                    local esp = espObjects[v]
-                    if not esp then
-                        esp = Instance.new("TextLabel")
-                        esp.BackgroundTransparency = 1
-                        esp.Font = Enum.Font.GothamBold
-                        esp.TextSize = 14
-                        esp.TextStrokeTransparency = 0.5
-                        esp.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-                        esp.Parent = Gui
-                        espObjects[v] = esp
-                    end
-                    
-                    esp.TextColor3 = espColor
-                    
-                    local dist = 0
-                    local playerRoot = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-                    if playerRoot then
-                        dist = (root.Position - playerRoot.Position).Magnitude
-                    end
-                    
-                    esp.Text = v.Name .. "  [" .. math.floor(dist) .. "m]"
-                    esp.Position = UDim2.new(0, pos.X - esp.TextBounds.X/2, 0, pos.Y - esp.TextBounds.Y/2)
-                    esp.Visible = true
-                else
-                    if espObjects[v] then
-                        espObjects[v].Visible = false
-                    end
+local function GetKeyRemainingTime()
+    if isfile and readfile and isfile(KEY_FILE_NAME) then
+        local success, content = pcall(readfile, KEY_FILE_NAME)
+        if success and content then
+            local decodeSuccess, data = pcall(function()
+                return HttpService:JSONDecode(content)
+            end)
+            if decodeSuccess and type(data) == "table" and data.ExpireTimestamp then
+                local timeLeft = data.ExpireTimestamp - os.time()
+                if timeLeft > 0 then
+                    return timeLeft
                 end
             end
         end
     end
-    
-    for player, obj in pairs(espObjects) do
-        if not Players:FindFirstChild(player.Name) then
-            obj:Destroy()
-            espObjects[player] = nil
-        end
-    end
+    return nil
 end
 
-game:GetService('RunService').RenderStepped:connect(function()
-    UpdateESP()
-end)
-
--- Cập nhật rainbow
-game:GetService('RunService').RenderStepped:connect(function()
-    if not Settings.Rainbow then
-        return
+local function Save24hKey()
+    if writefile then
+        local data = { ExpireTimestamp = os.time() + 86400 }
+        pcall(function()
+            writefile(KEY_FILE_NAME, HttpService:JSONEncode(data))
+        end)
     end
+end
+-- ============================================
+-- PHẦN 4: GIAO DIỆN NGƯỜI DÙNG (COPY ĐOẠN NÀY)
+-- ============================================
 
-    local color = GetColor()
-    Fill.BackgroundColor3 = color
-    ColorButton.BackgroundColor3 = color
-    _G.HeadColor = color
+-- Kiểm tra key đã lưu và launch script nếu còn hạn
+local remainingTime = GetKeyRemainingTime()
+if remainingTime and remainingTime > 0 then
+    ShowRemainingToast(remainingTime)
+    LaunchMainScript()
+    return
+end
+
+-- Tạo giao diện ScreenGui
+if CoreGui:FindFirstChild("CloverHub_GetKeyUI") then
+    CoreGui.CloverHub_GetKeyUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CloverHub_GetKeyUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+-- Tạo MainFrame và các thành phần giao diện (giữ nguyên code UI của bạn)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+-- ... (phần code UI của bạn, bao gồm InputBox, CheckKeyBtn, GetKeyBtn, StatusBanner, etc.)
+-- ============================================
+-- PHẦN 5: XỬ LÝ SỰ KIỆN & KIỂM TRA KEY (COPY ĐOẠN NÀY)
+-- ============================================
+
+-- Hàm copy link getkey (dùng JNKIE_GETKEY_URL đã cập nhật)
+GetKeyBtn.MouseButton1Click:Connect(function()
+    PlayBounce(GetKeyBtn)
+    SetClipboardSafe(JNKIE_GETKEY_URL)  -- 👈 Đã cập nhật link mới
     
-    for _, esp in pairs(espObjects) do
-        if esp and esp.Visible then
-            esp.TextColor3 = color
+    StatusBanner.BackgroundColor3 = Color3.fromRGB(10, 35, 25)
+    StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
+    StatusMsg.Text = Languages[CurrentLang].CopiedLink
+    
+    GetKeyBtn.Text = Languages[CurrentLang].BtnCopied
+    task.delay(2.5, function()
+        if GetKeyBtn and GetKeyBtn.Parent then
+            GetKeyBtn.Text = Languages[CurrentLang].GetKey
         end
-    end
+    end)
 end)
 
-print("👑 Quoc Anh Menu loaded!")
+-- Hàm kiểm tra key
+local isChecking = false
+CheckKeyBtn.MouseButton1Click:Connect(function()
+    if isChecking then return end
+    isChecking = true
+    PlayBounce(CheckKeyBtn)
+    
+    CheckKeyBtn.Text = Languages[CurrentLang].Checking
+    StatusBanner.BackgroundColor3 = Color3.fromRGB(12, 28, 20)
+    StatusMsg.TextColor3 = Color3.fromRGB(220, 255, 240)
+    StatusMsg.Text = Languages[CurrentLang].CheckingMsg
+    
+    task.wait(0.35)
+    local enteredKey = string.gsub(InputBox.Text, "%s+", "")
+    
+    -- ✅ Kiểm tra key với TodayKey (đã được gán từ API Key hoặc key dự phòng)
+    if enteredKey == TodayKey then
+        Save24hKey()
+        
+        StatusBanner.BackgroundColor3 = Color3.fromRGB(6, 45, 25)
+        StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
+        StatusMsg.Text = Languages[CurrentLang].Success
+        CheckKeyBtn.Text = Languages[CurrentLang].SuccessBtn
+        CheckKeyBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
+        
+        LaunchMainScript()
+        
+        task.wait(0.4)
+        TweenService:Create(MainScale, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Scale = 0.5
+        }):Play()
+        TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0.5, 0, 1.2, 0)
+        }):Play()
+        
+        task.wait(0.25)
+        ScreenGui:Destroy()
+    else
+        isChecking = false
+        CheckKeyBtn.Text = Languages[CurrentLang].CheckKey
+        StatusBanner.BackgroundColor3 = Color3.fromRGB(50, 15, 18)
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
+        StatusMsg.Text = Languages[CurrentLang].Error
+        
+        InputStroke.Color = Color3.fromRGB(255, 80, 80)
+        task.wait(0.6)
+        InputStroke.Color = Color3.fromRGB(25, 60, 48)
+    end
+end)
