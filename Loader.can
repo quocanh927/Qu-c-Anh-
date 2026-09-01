@@ -1,5 +1,5 @@
 -- ============================================
--- PHẦN 1: CẤU HÌNH
+-- PHẦN 1: KHAI BÁO & CẤU HÌNH
 -- ============================================
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -8,37 +8,57 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 
 -- ============================================
--- THÔNG TIN JNKIE (SỬA THEO BẠN)
+-- CẤU HÌNH JNKIE (NHẬP THÔNG TIN CỦA BẠN)
 -- ============================================
-local JNKIE_GETKEY_URL = "https://link4m.net/ie3RK7Vq"  -- Link lấy key (copy key thủ công)
-local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- API Key JNKIE
--- ⚠️ QUAN TRỌNG: Nếu JNKIE có API URL thật, sửa dòng dưới
-local JNKIE_API_URL = "https://jnkie.com/api/verify"  -- 👈 Cần URL API thật từ JNKIE
+local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- API Key của bạn
+local JNKIE_API_BASE = "https://jnkie.com/flow/8b883d41-e2e5-4a03-97a8-1120beca612d"  -- API Base URL
+local JNKIE_GETKEY_URL = "https://jnkie.com/flow/8b883d41-e2e5-4a03-97a8-1120beca612d"  -- Link getkey (dùng cho copy)
 local TARGET_SCRIPT_URL = "https://raw.githubusercontent.com/Ryuun0x/Clover/refs/heads/main/main.lua"
 -- ============================================
--- PHẦN 2: HÀM KIỂM TRA KEY QUA API
+-- PHẦN 2: HÀM GỌI API JNKIE
 -- ============================================
 
--- Hàm kiểm tra key qua API JNKIE (nếu có API URL)
-local function VerifyKeyViaAPI(key)
-    if JNKIE_API_URL and JNKIE_API_URL ~= "" then
-        local success, response = pcall(function()
-            return game:HttpGet(JNKIE_API_URL .. "?key=" .. key .. "&apikey=" .. JNKIE_API_KEY)
-        end)
-        if success and response then
-            -- Giả sử API trả về JSON: { "valid": true } hoặc { "status": "success" }
-            local decodeSuccess, data = pcall(function()
-                return HttpService:JSONDecode(response)
-            end)
-            if decodeSuccess then
-                return data.valid or data.status == "success" or false
-            else
-                -- Nếu không phải JSON, kiểm tra text
-                return response:lower():find("valid") or response:lower():find("success") ~= nil
-            end
+local function CallJNKIEAPI(method, params)
+    local url = JNKIE_API_BASE .. "/" .. method .. "?apikey=" .. JNKIE_API_KEY
+    if params then
+        for k, v in pairs(params) do
+            url = url .. "&" .. k .. "=" .. v
         end
     end
-    return nil  -- Không có API hoặc lỗi
+    
+    local success, response = pcall(function()
+        return game:HttpGet(url)
+    end)
+    
+    if success and response then
+        local decodeSuccess, data = pcall(function()
+            return HttpService:JSONDecode(response)
+        end)
+        if decodeSuccess then
+            return data
+        else
+            return { success = true, data = response }
+        end
+    end
+    return nil
+end
+
+-- Hàm lấy link flow từ JNKIE
+local function GetFlowLink()
+    local result = CallJNKIEAPI("getLink")
+    if result and result.link then
+        return result.link
+    end
+    return nil
+end
+
+-- Hàm xác thực key qua JNKIE API
+local function VerifyKeyViaAPI(key)
+    local result = CallJNKIEAPI("verifyKey", { key = key })
+    if result then
+        return result.valid == true or result.success == true
+    end
+    return false
 end
 
 -- Hàm chạy script chính
@@ -80,7 +100,7 @@ end
 -- Main Frame
 local MainFrame = Instance.new("Frame")
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-MainFrame.Size = UDim2.new(0, 380, 0, 380)
+MainFrame.Size = UDim2.new(0, 380, 0, 360)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(6, 15, 12)
 MainFrame.BorderSizePixel = 0
@@ -192,31 +212,10 @@ CheckStroke.Color = Color3.fromRGB(30, 85, 65)
 CheckStroke.Thickness = 1.5
 CheckStroke.Parent = CheckBtn
 
--- Nút kiểm tra API
-local ApiCheckBtn = Instance.new("TextButton")
-ApiCheckBtn.Size = UDim2.new(1, -40, 0, 30)
-ApiCheckBtn.Position = UDim2.new(0, 20, 0, 228)
-ApiCheckBtn.BackgroundColor3 = Color3.fromRGB(9, 22, 17)
-ApiCheckBtn.Text = "🔍 KIỂM TRA KEY QUA API"
-ApiCheckBtn.TextColor3 = Color3.fromRGB(52, 211, 153)
-ApiCheckBtn.TextSize = 11
-ApiCheckBtn.Font = Enum.Font.GothamBold
-ApiCheckBtn.AutoButtonColor = false
-ApiCheckBtn.Parent = MainFrame
-
-local ApiCorner = Instance.new("UICorner")
-ApiCorner.CornerRadius = UDim.new(0, 8)
-ApiCorner.Parent = ApiCheckBtn
-
-local ApiStroke = Instance.new("UIStroke")
-ApiStroke.Color = Color3.fromRGB(20, 65, 50)
-ApiStroke.Thickness = 1
-ApiStroke.Parent = ApiCheckBtn
-
 -- Status bar
 local StatusBar = Instance.new("Frame")
 StatusBar.Size = UDim2.new(1, -40, 0, 28)
-StatusBar.Position = UDim2.new(0, 20, 0, 268)
+StatusBar.Position = UDim2.new(0, 20, 0, 228)
 StatusBar.BackgroundColor3 = Color3.fromRGB(8, 20, 15)
 StatusBar.Parent = MainFrame
 
@@ -247,116 +246,87 @@ CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.AutoButtonColor = false
 CloseBtn.Parent = MainFrame
 -- ============================================
--- PHẦN 4: XỬ LÝ SỰ KIỆN NÚT BẤM
+-- PHẦN 4: XỬ LÝ SỰ KIỆN
 -- ============================================
 
--- Nút LẤY KEY (copy link getkey)
+-- Nút LẤY KEY (gọi flow:getLink)
 GetKeyBtn.MouseButton1Click:Connect(function()
-    SetClipboard(JNKIE_GETKEY_URL)
-    StatusMsg.Text = "📋 Đã copy link! Dán vào trình duyệt để lấy key."
-    StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
-    GetKeyBtn.Text = "✔ ĐÃ SAO CHÉP"
-    task.delay(2, function()
-        if GetKeyBtn and GetKeyBtn.Parent then
-            GetKeyBtn.Text = "⚡ LẤY KEY NGAY"
-        end
-    end)
-end)
-
--- Nút KÍCH HOẠT (xác thực key thủ công)
-local isChecking = false
-CheckBtn.MouseButton1Click:Connect(function()
-    if isChecking then return end
-    isChecking = true
-    
-    CheckBtn.Text = "⏳ Đang kiểm tra..."
-    StatusMsg.Text = "⏳ Đang xác thực key..."
+    StatusMsg.Text = "⏳ Đang lấy link từ JNKIE..."
     StatusMsg.TextColor3 = Color3.fromRGB(220, 255, 240)
-    InputStroke.Color = Color3.fromRGB(25, 60, 48)
     
-    task.wait(0.5)
-    local enteredKey = string.gsub(InputBox.Text, "%s+", "")
-    
-    -- Kiểm tra key thủ công
-    if enteredKey ~= "" then
-        -- Giả sử key đúng là key bạn lấy từ link
-        -- Bạn có thể cập nhật key đúng vào đây hoặc dùng API
-        local isValid = enteredKey == "6b5cdaa6-eb83-4427-9791-e39f6d723eda"  -- 👈 Sửa key đúng
-        
-        if isValid then
-            StatusMsg.Text = "✅ Xác thực thành công! Đang tải CloverHub..."
-            StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
-            CheckBtn.Text = "✔ THÀNH CÔNG"
-            CheckBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
-            InputStroke.Color = Color3.fromRGB(0, 255, 163)
-            
-            LaunchCloverHub()
-            
-            task.delay(1.5, function()
-                ScreenGui:Destroy()
-            end)
-        else
-            isChecking = false
-            StatusMsg.Text = "❌ Key không chính xác! Vui lòng thử lại."
-            StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
-            CheckBtn.Text = "✔ KÍCH HOẠT KEY"
-            InputStroke.Color = Color3.fromRGB(255, 80, 80)
-            task.delay(1.5, function()
-                InputStroke.Color = Color3.fromRGB(25, 60, 48)
-            end)
-        end
+    local link = GetFlowLink()
+    if link then
+        SetClipboard(link)
+        StatusMsg.Text = "📋 Đã copy link getkey từ JNKIE!"
+        StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
+        GetKeyBtn.Text = "✔ ĐÃ SAO CHÉP"
+        task.delay(2, function()
+            if GetKeyBtn and GetKeyBtn.Parent then
+                GetKeyBtn.Text = "⚡ LẤY KEY NGAY"
+            end
+        end)
     else
-        isChecking = false
-        StatusMsg.Text = "⚠️ Vui lòng nhập key!"
+        -- Nếu API không hoạt động, dùng link dự phòng
+        SetClipboard(JNKIE_GETKEY_URL)
+        StatusMsg.Text = "📋 Đã copy link dự phòng (link4m)!"
         StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
-        CheckBtn.Text = "✔ KÍCH HOẠT KEY"
+        GetKeyBtn.Text = "✔ ĐÃ SAO CHÉP"
+        task.delay(2, function()
+            if GetKeyBtn and GetKeyBtn.Parent then
+                GetKeyBtn.Text = "⚡ LẤY KEY NGAY"
+            end
+        end)
     end
 end)
 
--- Nút KIỂM TRA QUA API
-ApiCheckBtn.MouseButton1Click:Connect(function()
+-- Nút KÍCH HOẠT (gọi flow:verifyKey)
+local isChecking = false
+CheckBtn.MouseButton1Click:Connect(function()
+    if isChecking then return end
     local enteredKey = string.gsub(InputBox.Text, "%s+", "")
     if enteredKey == "" then
-        StatusMsg.Text = "⚠️ Vui lòng nhập key trước!"
+        StatusMsg.Text = "⚠️ Vui lòng nhập key!"
         StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
         return
     end
     
-    StatusMsg.Text = "⏳ Đang gọi API JNKIE..."
+    isChecking = true
+    CheckBtn.Text = "⏳ Đang kiểm tra..."
+    StatusMsg.Text = "⏳ Đang xác thực key qua JNKIE API..."
     StatusMsg.TextColor3 = Color3.fromRGB(220, 255, 240)
-    ApiCheckBtn.Text = "⏳ ĐANG KIỂM TRA..."
+    InputStroke.Color = Color3.fromRGB(25, 60, 48)
     
-    -- Gọi API kiểm tra
-    local apiResult = VerifyKeyViaAPI(enteredKey)
+    task.wait(0.5)
+    local isValid = VerifyKeyViaAPI(enteredKey)
     
-    if apiResult == true then
-        StatusMsg.Text = "✅ Key hợp lệ qua API! Đang tải CloverHub..."
+    if isValid then
+        StatusMsg.Text = "✅ Xác thực thành công! Đang tải CloverHub..."
         StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
-        ApiCheckBtn.Text = "✅ HỢP LỆ"
+        CheckBtn.Text = "✔ THÀNH CÔNG"
+        CheckBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
         InputStroke.Color = Color3.fromRGB(0, 255, 163)
         
         LaunchCloverHub()
+        
         task.delay(1.5, function()
             ScreenGui:Destroy()
         end)
-    elseif apiResult == false then
-        StatusMsg.Text = "❌ API xác nhận: Key không hợp lệ!"
+    else
+        isChecking = false
+        StatusMsg.Text = "❌ Key không hợp lệ theo JNKIE API!"
         StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
-        ApiCheckBtn.Text = "🔍 KIỂM TRA QUA API"
+        CheckBtn.Text = "✔ KÍCH HOẠT KEY"
         InputStroke.Color = Color3.fromRGB(255, 80, 80)
         task.delay(1.5, function()
             InputStroke.Color = Color3.fromRGB(25, 60, 48)
         end)
-    else
-        StatusMsg.Text = "⚠️ Không thể gọi API. Kiểm tra URL API JNKIE!"
-        StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
-        ApiCheckBtn.Text = "🔍 KIỂM TRA QUA API"
     end
 end)
 -- ============================================
 -- PHẦN 5: ĐÓNG MENU & KHỞI TẠO
 -- ============================================
 
+-- Nút đóng menu
 CloseBtn.MouseButton1Click:Connect(function()
     TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
         BackgroundTransparency = 1,
@@ -371,12 +341,9 @@ CloseBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ============================================
--- KHỞI TẠO
+-- KHỞI TẠO HOÀN TẤT
 -- ============================================
 print("🍀 CloverHub Menu đã sẵn sàng!")
 print("🔑 API Key: " .. JNKIE_API_KEY)
-if JNKIE_API_URL and JNKIE_API_URL ~= "" then
-    print("🔗 API URL: " .. JNKIE_API_URL)
-else
-    print("⚠️ Chưa có API URL, chỉ dùng kiểm tra thủ công!")
-end
+print("🔗 API Base: " .. JNKIE_API_BASE)
+print("📌 Link getkey dự phòng: " .. JNKIE_GETKEY_URL)
