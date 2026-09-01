@@ -13,7 +13,7 @@ local LocalPlayer = Players.LocalPlayer
 -- CẤU HÌNH CHÍNH (ĐÃ CẬP NHẬT)
 -- ============================================
 local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- 👈 API Key của bạn
-local JNKIE_GETKEY_URL = "https://link4m.net/ie3RK7Vq"        -- 👈 Link getkey mới
+local JNKIE_GETKEY_URL = "https://jnkie.com/flow/8b883d41-e2e5-4a03-97a8-1120beca612d"        -- 👈 Link getkey mới
 local TARGET_SCRIPT_URL = "https://raw.githubusercontent.com/Ryuun0x/Clover/refs/heads/main/main.lua"
 local KEY_FILE_NAME = "CloverHub_KeyData.json"
 -- ============================================
