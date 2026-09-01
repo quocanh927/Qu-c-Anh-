@@ -1,39 +1,48 @@
 -- ============================================
--- PHẦN 1: KHAI BÁO & CẤU HÌNH (COPY ĐOẠN NÀY)
+-- PHẦN 1: CẤU HÌNH
 -- ============================================
-
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 
 -- ============================================
--- CẤU HÌNH CHÍNH (ĐÃ CẬP NHẬT)
+-- THÔNG TIN JNKIE (SỬA THEO BẠN)
 -- ============================================
-local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- 👈 API Key của bạn
-local JNKIE_GETKEY_URL = "https://jnkie.com/flow/8b883d41-e2e5-4a03-97a8-1120beca612d"        -- 👈 Link getkey mới
+local JNKIE_GETKEY_URL = "https://link4m.net/ie3RK7Vq"  -- Link lấy key (copy key thủ công)
+local JNKIE_API_KEY = "6270c691-3559-4023-a0f8-67c1f70d72bf"  -- API Key JNKIE
+-- ⚠️ QUAN TRỌNG: Nếu JNKIE có API URL thật, sửa dòng dưới
+local JNKIE_API_URL = "https://jnkie.com/api/verify"  -- 👈 Cần URL API thật từ JNKIE
 local TARGET_SCRIPT_URL = "https://raw.githubusercontent.com/Ryuun0x/Clover/refs/heads/main/main.lua"
-local KEY_FILE_NAME = "CloverHub_KeyData.json"
 -- ============================================
--- PHẦN 2: HÀM LẤY KEY TỪ JNKIE (COPY ĐOẠN NÀY)
+-- PHẦN 2: HÀM KIỂM TRA KEY QUA API
 -- ============================================
 
-local function FetchKeyFromJNKIE()
-    -- Vì JNKIE không có API URL, hàm này giả định key được lấy thủ công
-    -- Nhưng chúng ta vẫn giữ API Key để có thể sử dụng sau này
-    warn("[CloverHub] JNKIE không cung cấp API URL. Vui lòng nhập key thủ công.")
-    return nil
+-- Hàm kiểm tra key qua API JNKIE (nếu có API URL)
+local function VerifyKeyViaAPI(key)
+    if JNKIE_API_URL and JNKIE_API_URL ~= "" then
+        local success, response = pcall(function()
+            return game:HttpGet(JNKIE_API_URL .. "?key=" .. key .. "&apikey=" .. JNKIE_API_KEY)
+        end)
+        if success and response then
+            -- Giả sử API trả về JSON: { "valid": true } hoặc { "status": "success" }
+            local decodeSuccess, data = pcall(function()
+                return HttpService:JSONDecode(response)
+            end)
+            if decodeSuccess then
+                return data.valid or data.status == "success" or false
+            else
+                -- Nếu không phải JSON, kiểm tra text
+                return response:lower():find("valid") or response:lower():find("success") ~= nil
+            end
+        end
+    end
+    return nil  -- Không có API hoặc lỗi
 end
 
--- Lấy key từ API, nếu lỗi dùng key dự phòng (bạn có thể thay key mặc định này)
-local TodayKey = FetchKeyFromJNKIE() or "6b5cdaa6-eb83-4427-9791-e39f6d723eda"
--- ============================================
--- PHẦN 3: HÀM HỖ TRỢ (COPY ĐOẠN NÀY)
--- ============================================
-
-local function LaunchMainScript()
+-- Hàm chạy script chính
+local function LaunchCloverHub()
     task.spawn(function()
         local success, result = pcall(function()
             return loadstring(game:HttpGet(TARGET_SCRIPT_URL))()
@@ -44,50 +53,18 @@ local function LaunchMainScript()
     end)
 end
 
-local function ShowRemainingToast(secondsLeft)
-    -- Code hiển thị thông báo toast (giữ nguyên từ script gốc của bạn)
-    -- ... (phần code toast của bạn)
-end
-
-local function GetKeyRemainingTime()
-    if isfile and readfile and isfile(KEY_FILE_NAME) then
-        local success, content = pcall(readfile, KEY_FILE_NAME)
-        if success and content then
-            local decodeSuccess, data = pcall(function()
-                return HttpService:JSONDecode(content)
-            end)
-            if decodeSuccess and type(data) == "table" and data.ExpireTimestamp then
-                local timeLeft = data.ExpireTimestamp - os.time()
-                if timeLeft > 0 then
-                    return timeLeft
-                end
-            end
-        end
-    end
-    return nil
-end
-
-local function Save24hKey()
-    if writefile then
-        local data = { ExpireTimestamp = os.time() + 86400 }
-        pcall(function()
-            writefile(KEY_FILE_NAME, HttpService:JSONEncode(data))
-        end)
+-- Hàm copy clipboard
+local function SetClipboard(text)
+    if setclipboard then
+        setclipboard(text)
+    elseif toclipboard then
+        toclipboard(text)
     end
 end
 -- ============================================
--- PHẦN 4: GIAO DIỆN NGƯỜI DÙNG (COPY ĐOẠN NÀY)
+-- PHẦN 3: TẠO GIAO DIỆN MENU
 -- ============================================
 
--- Kiểm tra key đã lưu và launch script nếu còn hạn
-local remainingTime = GetKeyRemainingTime()
-if remainingTime and remainingTime > 0 then
-    ShowRemainingToast(remainingTime)
-    LaunchMainScript()
-    return
-end
-
--- Tạo giao diện ScreenGui
 if CoreGui:FindFirstChild("CloverHub_GetKeyUI") then
     CoreGui.CloverHub_GetKeyUI:Destroy()
 end
@@ -95,84 +72,311 @@ end
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "CloverHub_GetKeyUI"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 pcall(function() ScreenGui.Parent = CoreGui end)
 if not ScreenGui.Parent then
     ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
 
--- Tạo MainFrame và các thành phần giao diện (giữ nguyên code UI của bạn)
+-- Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
--- ... (phần code UI của bạn, bao gồm InputBox, CheckKeyBtn, GetKeyBtn, StatusBanner, etc.)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.Size = UDim2.new(0, 380, 0, 380)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(6, 15, 12)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+-- Hiệu ứng mở
+MainFrame.BackgroundTransparency = 1
+local MainScale = Instance.new("UIScale")
+MainScale.Scale = 0.6
+MainScale.Parent = MainFrame
+
+TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    BackgroundTransparency = 0
+}):Play()
+TweenService:Create(MainScale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Scale = 1
+}):Play()
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 16)
+Corner.Parent = MainFrame
+
+local Stroke = Instance.new("UIStroke")
+Stroke.Thickness = 2
+Stroke.Color = Color3.fromRGB(0, 255, 163)
+Stroke.Parent = MainFrame
+
+-- Tiêu đề
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -40, 0, 32)
+Title.Position = UDim2.new(0, 20, 0, 16)
+Title.BackgroundTransparency = 1
+Title.Text = "🍀 CLOVERHUB SYSTEM"
+Title.TextColor3 = Color3.fromRGB(0, 255, 163)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBlack
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = MainFrame
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, -40, 0, 18)
+SubTitle.Position = UDim2.new(0, 20, 0, 46)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "🔑 Nhập key JNKIE để kích hoạt"
+SubTitle.TextColor3 = Color3.fromRGB(140, 185, 165)
+SubTitle.TextSize = 11
+SubTitle.Font = Enum.Font.GothamMedium
+SubTitle.TextXAlignment = Enum.TextXAlignment.Left
+SubTitle.Parent = MainFrame
+
+-- Ô nhập key
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(1, -40, 0, 38)
+InputBox.Position = UDim2.new(0, 20, 0, 80)
+InputBox.BackgroundColor3 = Color3.fromRGB(11, 24, 19)
+InputBox.TextColor3 = Color3.fromRGB(240, 255, 250)
+InputBox.PlaceholderColor3 = Color3.fromRGB(100, 145, 130)
+InputBox.PlaceholderText = "Nhập key JNKIE..."
+InputBox.Text = ""
+InputBox.TextSize = 13
+InputBox.Font = Enum.Font.GothamMedium
+InputBox.ClearTextOnFocus = false
+InputBox.Parent = MainFrame
+
+local InputCorner = Instance.new("UICorner")
+InputCorner.CornerRadius = UDim.new(0, 10)
+InputCorner.Parent = InputBox
+
+local InputStroke = Instance.new("UIStroke")
+InputStroke.Color = Color3.fromRGB(25, 60, 48)
+InputStroke.Thickness = 1.5
+InputStroke.Parent = InputBox
+
+-- Nút lấy key
+local GetKeyBtn = Instance.new("TextButton")
+GetKeyBtn.Size = UDim2.new(1, -40, 0, 40)
+GetKeyBtn.Position = UDim2.new(0, 20, 0, 128)
+GetKeyBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 163)
+GetKeyBtn.Text = "⚡ LẤY KEY NGAY"
+GetKeyBtn.TextColor3 = Color3.fromRGB(5, 20, 14)
+GetKeyBtn.TextSize = 14
+GetKeyBtn.Font = Enum.Font.GothamBlack
+GetKeyBtn.AutoButtonColor = false
+GetKeyBtn.Parent = MainFrame
+
+local GetKeyCorner = Instance.new("UICorner")
+GetKeyCorner.CornerRadius = UDim.new(0, 10)
+GetKeyCorner.Parent = GetKeyBtn
+
+-- Nút kích hoạt
+local CheckBtn = Instance.new("TextButton")
+CheckBtn.Size = UDim2.new(1, -40, 0, 40)
+CheckBtn.Position = UDim2.new(0, 20, 0, 178)
+CheckBtn.BackgroundColor3 = Color3.fromRGB(16, 42, 33)
+CheckBtn.Text = "✔ KÍCH HOẠT KEY"
+CheckBtn.TextColor3 = Color3.fromRGB(220, 255, 240)
+CheckBtn.TextSize = 14
+CheckBtn.Font = Enum.Font.GothamBlack
+CheckBtn.AutoButtonColor = false
+CheckBtn.Parent = MainFrame
+
+local CheckCorner = Instance.new("UICorner")
+CheckCorner.CornerRadius = UDim.new(0, 10)
+CheckCorner.Parent = CheckBtn
+
+local CheckStroke = Instance.new("UIStroke")
+CheckStroke.Color = Color3.fromRGB(30, 85, 65)
+CheckStroke.Thickness = 1.5
+CheckStroke.Parent = CheckBtn
+
+-- Nút kiểm tra API
+local ApiCheckBtn = Instance.new("TextButton")
+ApiCheckBtn.Size = UDim2.new(1, -40, 0, 30)
+ApiCheckBtn.Position = UDim2.new(0, 20, 0, 228)
+ApiCheckBtn.BackgroundColor3 = Color3.fromRGB(9, 22, 17)
+ApiCheckBtn.Text = "🔍 KIỂM TRA KEY QUA API"
+ApiCheckBtn.TextColor3 = Color3.fromRGB(52, 211, 153)
+ApiCheckBtn.TextSize = 11
+ApiCheckBtn.Font = Enum.Font.GothamBold
+ApiCheckBtn.AutoButtonColor = false
+ApiCheckBtn.Parent = MainFrame
+
+local ApiCorner = Instance.new("UICorner")
+ApiCorner.CornerRadius = UDim.new(0, 8)
+ApiCorner.Parent = ApiCheckBtn
+
+local ApiStroke = Instance.new("UIStroke")
+ApiStroke.Color = Color3.fromRGB(20, 65, 50)
+ApiStroke.Thickness = 1
+ApiStroke.Parent = ApiCheckBtn
+
+-- Status bar
+local StatusBar = Instance.new("Frame")
+StatusBar.Size = UDim2.new(1, -40, 0, 28)
+StatusBar.Position = UDim2.new(0, 20, 0, 268)
+StatusBar.BackgroundColor3 = Color3.fromRGB(8, 20, 15)
+StatusBar.Parent = MainFrame
+
+local StatusCorner = Instance.new("UICorner")
+StatusCorner.CornerRadius = UDim.new(0, 8)
+StatusCorner.Parent = StatusBar
+
+local StatusMsg = Instance.new("TextLabel")
+StatusMsg.Size = UDim2.new(1, -12, 1, 0)
+StatusMsg.Position = UDim2.new(0, 6, 0, 0)
+StatusMsg.BackgroundTransparency = 1
+StatusMsg.Text = "⏱ Key có hiệu lực 24h"
+StatusMsg.TextColor3 = Color3.fromRGB(150, 200, 180)
+StatusMsg.TextSize = 10.5
+StatusMsg.Font = Enum.Font.GothamMedium
+StatusMsg.TextWrapped = true
+StatusMsg.Parent = StatusBar
+
+-- Nút đóng
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -44, 0, 14)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+CloseBtn.TextSize = 18
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.AutoButtonColor = false
+CloseBtn.Parent = MainFrame
 -- ============================================
--- PHẦN 5: XỬ LÝ SỰ KIỆN & KIỂM TRA KEY (COPY ĐOẠN NÀY)
+-- PHẦN 4: XỬ LÝ SỰ KIỆN NÚT BẤM
 -- ============================================
 
--- Hàm copy link getkey (dùng JNKIE_GETKEY_URL đã cập nhật)
+-- Nút LẤY KEY (copy link getkey)
 GetKeyBtn.MouseButton1Click:Connect(function()
-    PlayBounce(GetKeyBtn)
-    SetClipboardSafe(JNKIE_GETKEY_URL)  -- 👈 Đã cập nhật link mới
-    
-    StatusBanner.BackgroundColor3 = Color3.fromRGB(10, 35, 25)
+    SetClipboard(JNKIE_GETKEY_URL)
+    StatusMsg.Text = "📋 Đã copy link! Dán vào trình duyệt để lấy key."
     StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
-    StatusMsg.Text = Languages[CurrentLang].CopiedLink
-    
-    GetKeyBtn.Text = Languages[CurrentLang].BtnCopied
-    task.delay(2.5, function()
+    GetKeyBtn.Text = "✔ ĐÃ SAO CHÉP"
+    task.delay(2, function()
         if GetKeyBtn and GetKeyBtn.Parent then
-            GetKeyBtn.Text = Languages[CurrentLang].GetKey
+            GetKeyBtn.Text = "⚡ LẤY KEY NGAY"
         end
     end)
 end)
 
--- Hàm kiểm tra key
+-- Nút KÍCH HOẠT (xác thực key thủ công)
 local isChecking = false
-CheckKeyBtn.MouseButton1Click:Connect(function()
+CheckBtn.MouseButton1Click:Connect(function()
     if isChecking then return end
     isChecking = true
-    PlayBounce(CheckKeyBtn)
     
-    CheckKeyBtn.Text = Languages[CurrentLang].Checking
-    StatusBanner.BackgroundColor3 = Color3.fromRGB(12, 28, 20)
+    CheckBtn.Text = "⏳ Đang kiểm tra..."
+    StatusMsg.Text = "⏳ Đang xác thực key..."
     StatusMsg.TextColor3 = Color3.fromRGB(220, 255, 240)
-    StatusMsg.Text = Languages[CurrentLang].CheckingMsg
+    InputStroke.Color = Color3.fromRGB(25, 60, 48)
     
-    task.wait(0.35)
+    task.wait(0.5)
     local enteredKey = string.gsub(InputBox.Text, "%s+", "")
     
-    -- ✅ Kiểm tra key với TodayKey (đã được gán từ API Key hoặc key dự phòng)
-    if enteredKey == TodayKey then
-        Save24hKey()
+    -- Kiểm tra key thủ công
+    if enteredKey ~= "" then
+        -- Giả sử key đúng là key bạn lấy từ link
+        -- Bạn có thể cập nhật key đúng vào đây hoặc dùng API
+        local isValid = enteredKey == "6b5cdaa6-eb83-4427-9791-e39f6d723eda"  -- 👈 Sửa key đúng
         
-        StatusBanner.BackgroundColor3 = Color3.fromRGB(6, 45, 25)
-        StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
-        StatusMsg.Text = Languages[CurrentLang].Success
-        CheckKeyBtn.Text = Languages[CurrentLang].SuccessBtn
-        CheckKeyBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
-        
-        LaunchMainScript()
-        
-        task.wait(0.4)
-        TweenService:Create(MainScale, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Scale = 0.5
-        }):Play()
-        TweenService:Create(MainFrame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            BackgroundTransparency = 1,
-            Position = UDim2.new(0.5, 0, 1.2, 0)
-        }):Play()
-        
-        task.wait(0.25)
-        ScreenGui:Destroy()
+        if isValid then
+            StatusMsg.Text = "✅ Xác thực thành công! Đang tải CloverHub..."
+            StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
+            CheckBtn.Text = "✔ THÀNH CÔNG"
+            CheckBtn.BackgroundColor3 = Color3.fromRGB(16, 185, 129)
+            InputStroke.Color = Color3.fromRGB(0, 255, 163)
+            
+            LaunchCloverHub()
+            
+            task.delay(1.5, function()
+                ScreenGui:Destroy()
+            end)
+        else
+            isChecking = false
+            StatusMsg.Text = "❌ Key không chính xác! Vui lòng thử lại."
+            StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
+            CheckBtn.Text = "✔ KÍCH HOẠT KEY"
+            InputStroke.Color = Color3.fromRGB(255, 80, 80)
+            task.delay(1.5, function()
+                InputStroke.Color = Color3.fromRGB(25, 60, 48)
+            end)
+        end
     else
         isChecking = false
-        CheckKeyBtn.Text = Languages[CurrentLang].CheckKey
-        StatusBanner.BackgroundColor3 = Color3.fromRGB(50, 15, 18)
-        StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
-        StatusMsg.Text = Languages[CurrentLang].Error
-        
-        InputStroke.Color = Color3.fromRGB(255, 80, 80)
-        task.wait(0.6)
-        InputStroke.Color = Color3.fromRGB(25, 60, 48)
+        StatusMsg.Text = "⚠️ Vui lòng nhập key!"
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
+        CheckBtn.Text = "✔ KÍCH HOẠT KEY"
     end
 end)
+
+-- Nút KIỂM TRA QUA API
+ApiCheckBtn.MouseButton1Click:Connect(function()
+    local enteredKey = string.gsub(InputBox.Text, "%s+", "")
+    if enteredKey == "" then
+        StatusMsg.Text = "⚠️ Vui lòng nhập key trước!"
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
+        return
+    end
+    
+    StatusMsg.Text = "⏳ Đang gọi API JNKIE..."
+    StatusMsg.TextColor3 = Color3.fromRGB(220, 255, 240)
+    ApiCheckBtn.Text = "⏳ ĐANG KIỂM TRA..."
+    
+    -- Gọi API kiểm tra
+    local apiResult = VerifyKeyViaAPI(enteredKey)
+    
+    if apiResult == true then
+        StatusMsg.Text = "✅ Key hợp lệ qua API! Đang tải CloverHub..."
+        StatusMsg.TextColor3 = Color3.fromRGB(0, 255, 163)
+        ApiCheckBtn.Text = "✅ HỢP LỆ"
+        InputStroke.Color = Color3.fromRGB(0, 255, 163)
+        
+        LaunchCloverHub()
+        task.delay(1.5, function()
+            ScreenGui:Destroy()
+        end)
+    elseif apiResult == false then
+        StatusMsg.Text = "❌ API xác nhận: Key không hợp lệ!"
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 110, 110)
+        ApiCheckBtn.Text = "🔍 KIỂM TRA QUA API"
+        InputStroke.Color = Color3.fromRGB(255, 80, 80)
+        task.delay(1.5, function()
+            InputStroke.Color = Color3.fromRGB(25, 60, 48)
+        end)
+    else
+        StatusMsg.Text = "⚠️ Không thể gọi API. Kiểm tra URL API JNKIE!"
+        StatusMsg.TextColor3 = Color3.fromRGB(255, 200, 50)
+        ApiCheckBtn.Text = "🔍 KIỂM TRA QUA API"
+    end
+end)
+-- ============================================
+-- PHẦN 5: ĐÓNG MENU & KHỞI TẠO
+-- ============================================
+
+CloseBtn.MouseButton1Click:Connect(function()
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0.5, 0, 0.8, 0)
+    }):Play()
+    TweenService:Create(MainScale, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Scale = 0.5
+    }):Play()
+    task.delay(0.4, function()
+        ScreenGui:Destroy()
+    end)
+end)
+
+-- ============================================
+-- KHỞI TẠO
+-- ============================================
+print("🍀 CloverHub Menu đã sẵn sàng!")
+print("🔑 API Key: " .. JNKIE_API_KEY)
+if JNKIE_API_URL and JNKIE_API_URL ~= "" then
+    print("🔗 API URL: " .. JNKIE_API_URL)
+else
+    print("⚠️ Chưa có API URL, chỉ dùng kiểm tra thủ công!")
+end
